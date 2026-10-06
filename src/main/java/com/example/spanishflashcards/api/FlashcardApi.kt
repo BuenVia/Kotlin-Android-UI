@@ -7,7 +7,7 @@ import retrofit2.http.Path
 
 interface FlashcardApi {
 
-    @GET("/subject/getall")
+    @GET("/subject/getsubjectnames")
     suspend fun getSubjectNames(): List<SubjectNames>
 
     @GET("/subject/get/{id}")
