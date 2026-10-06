@@ -18,11 +18,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import com.example.spanishflashcards.model.Subject
+import androidx.compose.runtime.LaunchedEffect
+import com.example.spanishflashcards.api.RetrofitInstance
 
 @Composable
-fun LearnFunction(onBack: () -> Unit) {
+fun LearnFunction(subjectId: Long, onBack: () -> Unit) {
 
+    var subject by remember {
+        mutableStateOf<Subject?>(null)
+    }
+    LaunchedEffect(Unit) {
+        try {
+            subject = RetrofitInstance.api.getSubject(subjectId)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
     var  answerVisible by remember {
         mutableStateOf(false)
     }
@@ -34,11 +46,16 @@ fun LearnFunction(onBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+            Text(text = subject?.subjectName?: "Loading...",
+                fontSize = 64.sp)
+
             // Text
             if (answerVisible) {
-                Text("Dog", fontSize = 48.sp)
+                Text(text = subject?.vocabs?.get(0)?.esp?: "Loading...",
+                    fontSize = 48.sp)
             } else {
-                Text("Perro", fontSize = 48.sp)
+                Text(text = subject?.vocabs?.get(0)?.eng?: "Loading...",
+                    fontSize = 48.sp)
             }
 
             // Space
