@@ -266,6 +266,21 @@ fun LearnFunction(subjectId: Long, onBack: () -> Unit) {
                 } else {
                     Text("FINISHED")
                 }
+
+                Spacer(Modifier.height(10.dp))
+
+                // Back button
+                Button(
+                    onClick = { onBack(); vocabList = listOf< Vocab >(); subject = null},
+                    modifier = Modifier.height(44.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF3F51B5),
+                        contentColor = Color.White
+                    ),
+                ) {
+                    Text("Back")
+                }
             }
         }
 
