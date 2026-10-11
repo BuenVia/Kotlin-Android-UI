@@ -141,8 +141,8 @@ fun CreateFunction(onBack: () -> Unit) {
     }
 }
 
-suspend fun handleSubmit() {
+fun handleSubmit() {
     // Logic for making the API call
-    
+
 
 }
