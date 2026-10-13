@@ -1,12 +1,15 @@
 package com.example.spanishflashcards.api
 
 import com.example.spanishflashcards.model.CreateSubject
+import com.example.spanishflashcards.model.CreateSubjectResponse
 import com.example.spanishflashcards.model.CreateVocab
 import com.example.spanishflashcards.model.Subject
 import com.example.spanishflashcards.model.SubjectNames
+import com.example.spanishflashcards.model.Vocab
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Body
 
 interface FlashcardApi {
 
@@ -19,9 +22,13 @@ interface FlashcardApi {
     ): Subject
 
     @POST("/subject/create")
-    suspend fun createSubject(): CreateSubject
+    suspend fun createSubject(
+        @Body subject: CreateSubject
+    ): CreateSubjectResponse
 
     @POST("/vocab/create")
-    suspend fun createVocab(): CreateVocab
+    suspend fun createVocab(
+        @Body vocab: CreateVocab
+    ): CreateVocab
 
 }

@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.spanishflashcards.api.RetrofitInstance
+import com.example.spanishflashcards.create.CreateFunction
 import com.example.spanishflashcards.exam.ExamFunction
 import com.example.spanishflashcards.learn.LearnFunction
 import com.example.spanishflashcards.model.SubjectNames
@@ -62,7 +63,8 @@ class MainActivity : ComponentActivity() {
 
 enum class Screen {
     LEARN,
-    EXAM
+    EXAM,
+    CREATE
 }
 
 @Composable
@@ -179,6 +181,28 @@ fun mainHandler(modifier: Modifier = Modifier) {
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    Button(
+                        onClick = {
+                            userChoice = Screen.CREATE
+                        },
+                        modifier = Modifier.height(44.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF3F51B5),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Create")
+                    }
+                }
+
             }
         }
     }
@@ -194,6 +218,10 @@ fun mainHandler(modifier: Modifier = Modifier) {
             onBack = { userChoice = null }
         )
 
+        Screen.CREATE -> CreateFunction(
+            onBack = { userChoice = null }
+        )
+        
         null -> {}
     }
 }

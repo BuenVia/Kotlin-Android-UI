@@ -31,11 +31,14 @@ import androidx.compose.ui.unit.sp
 import com.example.spanishflashcards.api.RetrofitInstance
 import com.example.spanishflashcards.model.CreateSubject
 import com.example.spanishflashcards.model.CreateVocab
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun CreateFunction(onBack: () -> Unit) {
 
     val keyboardController = LocalSoftwareKeyboardController.current
+    val croutineScope = rememberCoroutineScope()
 
     var subjectVal by remember {
         mutableStateOf(CreateSubject(subjectName = ""))
@@ -89,37 +92,38 @@ fun CreateFunction(onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.padding(10.dp))
 
-            // Create the first vocab
-            Text("Create the firs Vocab")
-            // Vocab
-            TextField(
-                value = vocabVal.esp,
-                onValueChange = { vocabVal = vocabVal.copy(esp = it) },
-                label = { Text(text = "Vocab") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
-            )
-
-            Spacer(modifier = Modifier.padding(10.dp))
-
-            // Translation
-            TextField(
-                value = vocabVal.eng,
-                onValueChange = { vocabVal = vocabVal.copy(eng = it) },
-                label = { Text(text = "Translation") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
-            )
-
-            Spacer(modifier = Modifier.padding(10.dp))
+//            // Create the first vocab
+//            Text("Create the firs Vocab")
+//            // Vocab
+//            TextField(
+//                value = vocabVal.esp,
+//                onValueChange = { vocabVal = vocabVal.copy(esp = it) },
+//                label = { Text(text = "Vocab") },
+//                modifier = Modifier.fillMaxWidth(),
+//                singleLine = true,
+//                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+//                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
+//            )
+//
+//            Spacer(modifier = Modifier.padding(10.dp))
+//
+//            // Translation
+//            TextField(
+//                value = vocabVal.eng,
+//                onValueChange = { vocabVal = vocabVal.copy(eng = it) },
+//                label = { Text(text = "Translation") },
+//                modifier = Modifier.fillMaxWidth(),
+//                singleLine = true,
+//                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+//                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
+//            )
+//
+//            Spacer(modifier = Modifier.padding(10.dp))
 
             Button(
                 onClick = {
-                    handleSubmit()
+                    keyboardController?.hide()
+                    croutineScope.launch { handleSubmit(subjectVal, vocabVal) }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -141,8 +145,33 @@ fun CreateFunction(onBack: () -> Unit) {
     }
 }
 
-fun handleSubmit() {
+suspend fun handleSubmit(
+    subjectVal: CreateSubject,
+//    vocabVal: CreateVocab
+) {
     // Logic for making the API call
+    try {
 
+        if (subjectVal.subjectName == "") {
+            System.out.println("Empty Subject")
+            return
+        }
+
+        val createSubject = RetrofitInstance.api.createSubject(subjectVal)
+
+//        val vocabToCreate = vocabVal.copy(
+//            subjectId = createSubject.subjectId
+//        )
+//
+//        if (vocabToCreate.eng == "" || vocabToCreate.esp == "" || vocabToCreate.subjectId == null) {
+//            System.out.println("Empty Vocab")
+//            return
+//        }
+//
+//        RetrofitInstance.api.createVocab(vocabToCreate)
+
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
 
 }
