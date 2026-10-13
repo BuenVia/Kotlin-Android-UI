@@ -5,7 +5,6 @@ import com.example.spanishflashcards.model.CreateSubjectResponse
 import com.example.spanishflashcards.model.CreateVocab
 import com.example.spanishflashcards.model.Subject
 import com.example.spanishflashcards.model.SubjectNames
-import com.example.spanishflashcards.model.Vocab
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path

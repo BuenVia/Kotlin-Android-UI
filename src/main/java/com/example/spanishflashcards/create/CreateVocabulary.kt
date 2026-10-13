@@ -1,48 +1,40 @@
 package com.example.spanishflashcards.create
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.example.spanishflashcards.model.CreateVocab
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.TextField
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.unit.sp
 import com.example.spanishflashcards.api.RetrofitInstance
-import com.example.spanishflashcards.model.CreateSubject
-import com.example.spanishflashcards.model.CreateVocab
-import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun CreateFunction(onBack: () -> Unit) {
-
+fun CreateVocabulary(subjectId: Long, onBack: () -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val croutineScope = rememberCoroutineScope()
-
-    var subjectVal by remember {
-        mutableStateOf(CreateSubject(subjectName = ""))
-    }
 
     var vocabVal by remember {
         mutableStateOf(CreateVocab(esp = "", eng = "", subjectId = 0L))
@@ -76,14 +68,13 @@ fun CreateFunction(onBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Create A Subject
-            Text(text = "Create a Subject")
+                        // Create the first vocab
+            Text("Create the firs Vocab")
+            // Vocab
             TextField(
-                value = subjectVal.subjectName,
-                onValueChange = {
-                    newText -> subjectVal = subjectVal.copy(subjectName = newText)
-                },
-                label = { Text(text = "Subject") },
+                value = vocabVal.esp,
+                onValueChange = { vocabVal = vocabVal.copy(esp = it) },
+                label = { Text(text = "Vocab") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -92,38 +83,23 @@ fun CreateFunction(onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.padding(10.dp))
 
-//            // Create the first vocab
-//            Text("Create the firs Vocab")
-//            // Vocab
-//            TextField(
-//                value = vocabVal.esp,
-//                onValueChange = { vocabVal = vocabVal.copy(esp = it) },
-//                label = { Text(text = "Vocab") },
-//                modifier = Modifier.fillMaxWidth(),
-//                singleLine = true,
-//                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-//                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
-//            )
-//
-//            Spacer(modifier = Modifier.padding(10.dp))
-//
-//            // Translation
-//            TextField(
-//                value = vocabVal.eng,
-//                onValueChange = { vocabVal = vocabVal.copy(eng = it) },
-//                label = { Text(text = "Translation") },
-//                modifier = Modifier.fillMaxWidth(),
-//                singleLine = true,
-//                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-//                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
-//            )
-//
-//            Spacer(modifier = Modifier.padding(10.dp))
+            // Translation
+            TextField(
+                value = vocabVal.eng,
+                onValueChange = { vocabVal = vocabVal.copy(eng = it) },
+                label = { Text(text = "Translation") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
+            )
+
+            Spacer(modifier = Modifier.padding(10.dp))
 
             Button(
                 onClick = {
                     keyboardController?.hide()
-                    croutineScope.launch { handleSubmit(subjectVal, vocabVal) }
+                    croutineScope.launch { handleVocabSubmit(vocabVal) }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -141,23 +117,24 @@ fun CreateFunction(onBack: () -> Unit) {
             }
 
         }
-
     }
+
 }
 
-suspend fun handleSubmit(
-    subjectVal: CreateSubject,
-//    vocabVal: CreateVocab
-) {
+suspend fun handleVocabSubmit(vocabVal: CreateVocab): String {
+
+
     // Logic for making the API call
     try {
 
-        if (subjectVal.subjectName == "") {
-            System.out.println("Empty Subject")
-            return
+        if (vocabVal.esp == "" || vocabVal.eng == "") {
+            System.out.println("Empty Vocab Field(s)")
+            return "Fail"
         }
 
-        val createSubject = RetrofitInstance.api.createSubject(subjectVal)
+        val createVocab = RetrofitInstance.api.createVocab(vocabVal)
+
+        return "Success";
 
 //        val vocabToCreate = vocabVal.copy(
 //            subjectId = createSubject.subjectId
@@ -172,6 +149,7 @@ suspend fun handleSubmit(
 
     } catch (e: Exception) {
         e.printStackTrace()
+        return "Fail";
     }
 
 }

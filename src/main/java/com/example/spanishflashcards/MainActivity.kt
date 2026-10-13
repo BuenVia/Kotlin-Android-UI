@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -37,6 +38,7 @@ import com.example.spanishflashcards.create.CreateFunction
 import com.example.spanishflashcards.exam.ExamFunction
 import com.example.spanishflashcards.learn.LearnFunction
 import com.example.spanishflashcards.model.SubjectNames
+import com.example.spanishflashcards.subject.SubjectViewFunction
 import com.example.spanishflashcards.ui.theme.SpanishFlashcardsTheme
 
 class MainActivity : ComponentActivity() {
@@ -62,9 +64,8 @@ class MainActivity : ComponentActivity() {
 }
 
 enum class Screen {
-    LEARN,
-    EXAM,
-    CREATE
+    CREATE,
+    SUBJECT
 }
 
 @Composable
@@ -139,45 +140,19 @@ fun mainHandler(modifier: Modifier = Modifier) {
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
 
-                            Text(
-                                text = sub.subjectName ?: "Loading...",
-                                fontSize = 18.sp
-                            )
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    subjectChoice = sub.id
+                                    userChoice = Screen.SUBJECT
+                                }
                             ) {
-
-                                Button(
-                                    onClick = {
-                                        subjectChoice = sub.id
-                                        userChoice = Screen.LEARN
-                                    },
-                                    modifier = Modifier.height(44.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF3F51B5),
-                                        contentColor = Color.White
-                                    )
-                                ) {
-                                    Text("Learn")
-                                }
-
-                                Button(
-                                    onClick = {
-                                        subjectChoice = sub.id
-                                        userChoice = Screen.EXAM
-                                    },
-                                    modifier = Modifier.height(44.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFE8EAF6),
-                                        contentColor = Color(0xFF3F51B5)
-                                    )
-                                ) {
-                                    Text("Exam")
-                                }
+                                Text(
+                                    text = sub.subjectName ?: "Loading...",
+                                    fontSize = 18.sp
+                                )
                             }
+
                         }
                     }
                 }
@@ -208,20 +183,17 @@ fun mainHandler(modifier: Modifier = Modifier) {
     }
 
     when (userChoice) {
-        Screen.LEARN -> LearnFunction(
-            subjectChoice,
-            onBack = { userChoice = null }
-        )
 
-        Screen.EXAM -> ExamFunction(
+        Screen.SUBJECT -> SubjectViewFunction(
             subjectChoice,
             onBack = { userChoice = null }
+
         )
 
         Screen.CREATE -> CreateFunction(
             onBack = { userChoice = null }
         )
-        
+
         null -> {}
     }
 }
