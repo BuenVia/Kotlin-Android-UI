@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +34,14 @@ import com.example.spanishflashcards.exam.ExamFunction
 import com.example.spanishflashcards.learn.LearnFunction
 import com.example.spanishflashcards.model.Subject
 import com.example.spanishflashcards.model.Vocab
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 
 
 enum class LearnScreen {
@@ -59,105 +69,15 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
         mutableStateOf(listOf< Vocab>())
     }
 
-    LaunchedEffect(Unit) {
+    var refreshTrigger by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(Unit, refreshTrigger) {
         try {
             subject = RetrofitInstance.api.getSubject(subjectId)
             vocabList = subject?.vocabs
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-
-        // Back button
-        Button(
-            onClick = { onBack(); vocabList = listOf< Vocab >() },
-            modifier = Modifier.align(Alignment.TopEnd).padding(25.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                contentColor = Color.White
-            ),
-        ) {
-            Text("Back")
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-
-            Text(
-                text = subject?.subjectName ?: "Loading...",
-                fontSize = 18.sp
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-
-                Button(
-                    onClick = {
-                        subjectChoice = subjectId
-                        learnChoice = LearnScreen.LEARN
-                        println(subjectId)
-                    },
-                    modifier = Modifier.height(44.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF3F51B5),
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Learn")
-                }
-
-                Button(
-                    onClick = {
-                        subjectChoice = subjectId
-                        learnChoice = LearnScreen.EXAM
-                        println(subjectId)
-                    },
-                    modifier = Modifier.height(44.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE8EAF6),
-                        contentColor = Color(0xFF3F51B5)
-                    )
-                ) {
-                    Text("Exam")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(
-                onClick = {
-                    subjectChoice = subjectId
-                    learnChoice = LearnScreen.CREATE_VOCAB
-                    println(subjectId)
-                },
-            ) {
-                Text("Create Vocab")
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-                if (vocabList != null) {
-                    for (vocab in vocabList) {
-                        Text(text = vocab.esp)
-                    }
-                }
-            }
-        }
-
     }
 
     when (learnChoice) {
@@ -173,10 +93,185 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
 
         LearnScreen.CREATE_VOCAB -> CreateVocabulary(
             subjectId,
-            onBack = { learnChoice = null }
+            onBack = {
+                learnChoice = null
+                refreshTrigger++
+            }
         )
 
-        null -> {}
+        null -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFF8F9FC))
+                    .padding(24.dp)
+            )
+            {
+
+                // Back button
+                Text(
+                    text = "← Back",
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .clickable {
+                            vocabList = listOf<Vocab>()
+                            onBack()
+                        }
+                        .padding(12.dp),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF475569)
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 56.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    // Subject heading
+                    Text(
+                        text = subject?.subjectName ?: "Loading...",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF172033),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Choose how you want to practise",
+                        fontSize = 14.sp,
+                        color = Color(0xFF64748B),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    // Main actions
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+
+                        Button(
+                            onClick = {
+                                subjectChoice = subjectId
+                                learnChoice = LearnScreen.LEARN
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF4F46E5),
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text(
+                                text = "Learn",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                subjectChoice = subjectId
+                                learnChoice = LearnScreen.EXAM
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFE0E7FF),
+                                contentColor = Color(0xFF3730A3)
+                            )
+                        ) {
+                            Text(
+                                text = "Exam",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Secondary action
+                    Button(
+                        onClick = {
+                            subjectChoice = subjectId
+                            learnChoice = LearnScreen.CREATE_VOCAB
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color(0xFF475569)
+                        )
+                    ) {
+                        Text(
+                            text = "+  Create vocabulary",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    // Vocabulary section heading
+                    Text(
+                        text = "Vocabulary",
+                        modifier = Modifier.fillMaxWidth(),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF172033)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Scrollable vocabulary list
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(vocabList.orEmpty()) { vocab ->
+
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.White
+                                ),
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = 1.dp
+                                )
+                            ) {
+                                Text(
+                                    text = vocab.esp,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(
+                                            horizontal = 18.dp,
+                                            vertical = 16.dp
+                                        ),
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFF334155)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
     }
 
 }

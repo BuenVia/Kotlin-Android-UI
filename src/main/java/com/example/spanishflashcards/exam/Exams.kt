@@ -1,6 +1,9 @@
+
 package com.example.spanishflashcards.exam
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -18,6 +20,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,17 +49,8 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
         mutableStateOf<Subject?>(null)
     }
 
-    var vocabList: List<Vocab>? by remember {
-        mutableStateOf(listOf< Vocab>())
-    }
-
-    LaunchedEffect(Unit) {
-        try {
-            subject = RetrofitInstance.api.getSubject(subjectId)
-            vocabList = subject?.vocabs
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    var vocabList by remember {
+        mutableStateOf<List<Vocab>>(emptyList())
     }
 
     var indexNum by remember {
@@ -75,36 +69,57 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
         mutableStateOf(false)
     }
 
-    var colorScheme by remember { mutableStateOf(Color(0xFFdddddd)) }
+    val neutralColor = Color(0xFFE0E7FF)
+    val primaryColor = Color(0xFF4F46E5)
+    val textColor = Color(0xFF1F2937)
+    val secondaryTextColor = Color(0xFF6B7280)
+    val successColor = Color(0xFF15803D)
+    val errorColor = Color(0xFFB91C1C)
+
+    var feedbackColor by remember {
+        mutableStateOf(neutralColor)
+    }
 
     val lenVocabs = subject?.vocabs?.size ?: 0
 
-    fun checkAnswer(userAnswer: String, correctAnswer: String) {
-        if (userAnswer.trim().equals(correctAnswer, ignoreCase = true)) {
-            result = "Correct"
+    LaunchedEffect(subjectId) {
+        try {
+            subject = RetrofitInstance.api.getSubject(subjectId)
+            vocabList = subject?.vocabs ?: emptyList()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun checkAnswer(answer: String, correctAnswer: String) {
+        if (answer.trim().equals(correctAnswer, ignoreCase = true)) {
+            result = "Correct!"
             showNext = true
-            colorScheme = Color(0xFF007722)
+            feedbackColor = successColor
         } else {
-            result = "Incorrect"
-            colorScheme = Color(0xFF882222)
+            result = "Incorrect. Try again."
+            feedbackColor = errorColor
         }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFF8F9FC))
             .padding(24.dp)
     ) {
 
         // Back button
         Button(
             onClick = { onBack() },
-            modifier = Modifier.align(Alignment.TopEnd).padding(25.dp),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 8.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                contentColor = Color.White
-            ),
+                containerColor = Color(0xFFE0E7FF),
+                contentColor = primaryColor
+            )
         ) {
             Text("Back")
         }
@@ -114,36 +129,63 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                 .fillMaxWidth()
                 .align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
-        )
-        {
+        ) {
 
-            if (indexNum < lenVocabs) {
+            if (subject == null) {
 
-                // Question
+                Text(
+                    text = "Loading...",
+                    fontSize = 18.sp,
+                    color = secondaryTextColor
+                )
+
+            } else if (indexNum < lenVocabs) {
+
+                // Heading
+                Text(
+                    text = subject?.subjectName ?: "",
+                    fontSize = 26.sp,
+                    color = textColor
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Question ${indexNum + 1} of $lenVocabs",
+                    fontSize = 14.sp,
+                    color = secondaryTextColor
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Question card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp).border(
+                        .height(220.dp)
+                        .border(
                             width = 2.dp,
-                            color = colorScheme,
-                            shape = RoundedCornerShape(12.dp)
+                            color = feedbackColor,
+                            shape = RoundedCornerShape(24.dp)
                         ),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
                     elevation = CardDefaults.cardElevation(
                         defaultElevation = 4.dp
                     )
                 ) {
-
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-
                         Text(
-                            text = subject?.vocabs?.get(indexNum)?.eng
-                                ?: "Loading...",
-                            fontSize = 36.sp,
-                            color = colorScheme
+                            text = subject?.vocabs
+                                ?.getOrNull(indexNum)?.eng
+                                ?: "",
+                            fontSize = 32.sp,
+                            color = textColor
                         )
                     }
                 }
@@ -155,31 +197,48 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                     value = userAnswer,
                     onValueChange = {
                         userAnswer = it
+                        result = ""
+                        feedbackColor = neutralColor
                     },
                     label = {
-                        Text(
-                            text = "Your answer",
-                            color = colorScheme
-                        )
+                        Text("Your answer")
                     },
-                    modifier = Modifier.fillMaxWidth().border(
-                        width = 2.dp,
-                        color = colorScheme,
-                        shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 1.dp,
+                            color = feedbackColor,
+                            shape = RoundedCornerShape(14.dp)
+                        ),
+                    textStyle = TextStyle(
+                        color = textColor,
+                        fontSize = 16.sp
                     ),
-                    textStyle = TextStyle(color = colorScheme),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     singleLine = true,
+                    enabled = !showNext,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        disabledContainerColor = Color.White,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = primaryColor,
+                        focusedLabelColor = primaryColor,
+                        unfocusedLabelColor = secondaryTextColor
+                    ),
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {
-                            checkAnswer(
-                                userAnswer,
-                                subject?.vocabs?.get(indexNum)?.esp ?: ""
-                            )
-
+                            if (!showNext) {
+                                checkAnswer(
+                                    userAnswer,
+                                    subject?.vocabs
+                                        ?.getOrNull(indexNum)?.esp ?: ""
+                                )
+                            }
                             keyboardController?.hide()
                         }
                     )
@@ -187,24 +246,25 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Result
+                // Answer feedback
                 Text(
                     text = result,
-                    fontSize = 20.sp
+                    fontSize = 18.sp,
+                    color = feedbackColor
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-                // Check / Next / Finish
                 if (!showNext) {
 
+                    // Check answer
                     Button(
                         onClick = {
                             checkAnswer(
                                 userAnswer,
-                                subject?.vocabs?.get(indexNum)?.esp ?: ""
+                                subject?.vocabs
+                                    ?.getOrNull(indexNum)?.esp ?: ""
                             )
-
                             keyboardController?.hide()
                         },
                         modifier = Modifier
@@ -212,8 +272,8 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                             .height(52.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorScheme,
-                            contentColor = Color(0xFF333333)
+                            containerColor = primaryColor,
+                            contentColor = Color.White
                         )
                     ) {
                         Text(
@@ -222,28 +282,23 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                         )
                     }
 
-                } else if (indexNum < lenVocabs) {
+                } else {
 
+                    // Next question
                     Button(
                         onClick = {
-                            indexNum += 1
-
-                            // Clear previous answer
+                            indexNum++
                             userAnswer = ""
-
-                            // Clear previous result
                             result = ""
-
                             showNext = false
-
-                            colorScheme = Color(0xFFdddddd)
+                            feedbackColor = neutralColor
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorScheme,
+                            containerColor = primaryColor,
                             contentColor = Color.White
                         )
                     ) {
@@ -252,61 +307,77 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                             fontSize = 16.sp
                         )
                     }
-
                 }
-//                else {
-//
-//                    if (vocabList != null) {
-//                        for (vocab in vocabList) {
-//                            Text(text = vocab.esp + " / " + vocab.eng)
-//                            Spacer(modifier = Modifier.height(10.dp))
-//                        }
-//                    }
-//
-//                    Button(
-//                        onClick = {
-//                            onBack()
-//                        },
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(52.dp),
-//                        shape = RoundedCornerShape(14.dp),
-//                        colors = ButtonDefaults.buttonColors(
-//                            containerColor = Color(0xFFE8EAF6),
-//                            contentColor = Color(0xFF3F51B5)
-//                        )
-//                    )
-//                    {
-//                        Text(
-//                            text = "Finish",
-//                            fontSize = 16.sp
-//                        )
-//                    }
-//                }
 
             } else {
-                if (vocabList != null) {
-                    for (vocab in vocabList) {
-                        Text(text = vocab.esp + " / " + vocab.eng)
-                        Spacer(modifier = Modifier.height(10.dp))
+
+                // Exam finished
+                Text(
+                    text = "Exam completed!",
+                    fontSize = 26.sp,
+                    color = textColor
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "You've answered all $lenVocabs questions.",
+                    fontSize = 16.sp,
+                    color = secondaryTextColor
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Vocabulary summary
+                vocabList.forEach { vocab ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White
+                        ),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 2.dp
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = vocab.eng,
+                                fontSize = 16.sp,
+                                color = textColor
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                text = vocab.esp,
+                                fontSize = 16.sp,
+                                color = primaryColor
+                            )
+                        }
                     }
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Return to Subject View
                 Button(
-                    onClick = {
-                        onBack()
-                    },
+                    onClick = { onBack() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE8EAF6),
-                        contentColor = Color(0xFF3F51B5)
+                        containerColor = primaryColor,
+                        contentColor = Color.White
                     )
                 ) {
                     Text(
-                        text = "Finish",
+                        text = "Back to Subject",
                         fontSize = 16.sp
                     )
                 }

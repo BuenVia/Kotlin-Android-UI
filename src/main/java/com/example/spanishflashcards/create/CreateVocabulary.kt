@@ -1,14 +1,23 @@
+
 package com.example.spanishflashcards.create
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,44 +28,61 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.unit.dp
-import com.example.spanishflashcards.model.CreateVocab
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.TextField
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.spanishflashcards.api.RetrofitInstance
+import com.example.spanishflashcards.model.CreateVocab
 import kotlinx.coroutines.launch
 
 @Composable
 fun CreateVocabulary(subjectId: Long, onBack: () -> Unit) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val croutineScope = rememberCoroutineScope()
 
-    var vocabVal by remember {
-        mutableStateOf(CreateVocab(esp = "", eng = "", subjectId = 0L))
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
+
+    var vocabVal by remember(subjectId) {
+        mutableStateOf(
+            CreateVocab(
+                esp = "",
+                eng = "",
+                subjectId = subjectId
+            )
+        )
     }
+
+    var isLoading by remember {
+        mutableStateOf(false)
+    }
+
+    var errorMessage by remember {
+        mutableStateOf("")
+    }
+
+    val primaryColor = Color(0xFF4F46E5)
+    val backgroundColor = Color(0xFFF8F9FC)
+    val textColor = Color(0xFF1F2937)
+    val secondaryTextColor = Color(0xFF6B7280)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(backgroundColor)
             .padding(24.dp)
     ) {
 
         // Back button
         Button(
             onClick = { onBack() },
+            enabled = !isLoading,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(25.dp),
+                .padding(top = 8.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                contentColor = Color.White
-            ),
+                containerColor = Color(0xFFE0E7FF),
+                contentColor = primaryColor
+            )
         ) {
             Text("Back")
         }
@@ -68,88 +94,170 @@ fun CreateVocabulary(subjectId: Long, onBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-                        // Create the first vocab
-            Text("Create the firs Vocab")
-            // Vocab
+            // Heading
+            Text(
+                text = "Create Vocabulary",
+                fontSize = 26.sp,
+                color = textColor
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "Add a Spanish word and its English translation.",
+                fontSize = 14.sp,
+                color = secondaryTextColor
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Spanish word
             TextField(
                 value = vocabVal.esp,
-                onValueChange = { vocabVal = vocabVal.copy(esp = it) },
-                label = { Text(text = "Vocab") },
+                onValueChange = {
+                    vocabVal = vocabVal.copy(esp = it)
+                    errorMessage = ""
+                },
+                label = {
+                    Text("Spanish word")
+                },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
+                enabled = !isLoading,
+                shape = RoundedCornerShape(14.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    disabledContainerColor = Color.White,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = primaryColor,
+                    focusedLabelColor = primaryColor,
+                    unfocusedLabelColor = secondaryTextColor
+                ),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        // Move focus to the next field using the keyboard.
+                    }
+                )
             )
 
-            Spacer(modifier = Modifier.padding(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Translation
+            // English translation
             TextField(
                 value = vocabVal.eng,
-                onValueChange = { vocabVal = vocabVal.copy(eng = it) },
-                label = { Text(text = "Translation") },
+                onValueChange = {
+                    vocabVal = vocabVal.copy(eng = it)
+                    errorMessage = ""
+                },
+                label = {
+                    Text("English translation")
+                },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
+                enabled = !isLoading,
+                shape = RoundedCornerShape(14.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    disabledContainerColor = Color.White,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = primaryColor,
+                    focusedLabelColor = primaryColor,
+                    unfocusedLabelColor = secondaryTextColor
+                ),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                )
             )
 
-            Spacer(modifier = Modifier.padding(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
+            // Error feedback
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    fontSize = 14.sp,
+                    color = Color(0xFFB91C1C)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Create button
             Button(
                 onClick = {
                     keyboardController?.hide()
-                    croutineScope.launch { handleVocabSubmit(vocabVal) }
+
+                    if (vocabVal.esp.isBlank() || vocabVal.eng.isBlank()) {
+                        errorMessage = "Please complete both fields."
+                    } else {
+                        coroutineScope.launch {
+                            isLoading = true
+                            errorMessage = ""
+
+                            val result = handleVocabSubmit(vocabVal)
+
+                            isLoading = false
+
+                            if (result) {
+                                onBack()
+                            } else {
+                                errorMessage =
+                                    "Unable to create vocabulary. Please try again."
+                            }
+                        }
+                    }
                 },
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE8EAF6),
-                    contentColor = Color(0xFF3F51B5)
+                    containerColor = primaryColor,
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFFC7C9F8),
+                    disabledContentColor = Color.White
                 )
             ) {
-                Text(
-                    text = "Create",
-                    fontSize = 16.sp
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.height(22.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Create Vocabulary",
+                        fontSize = 16.sp
+                    )
+                }
             }
-
         }
     }
-
 }
 
-suspend fun handleVocabSubmit(vocabVal: CreateVocab): String {
-
-
-    // Logic for making the API call
-    try {
-
-        if (vocabVal.esp == "" || vocabVal.eng == "") {
-            System.out.println("Empty Vocab Field(s)")
-            return "Fail"
+suspend fun handleVocabSubmit(vocabVal: CreateVocab): Boolean {
+    return try {
+        if (vocabVal.esp.isBlank() || vocabVal.eng.isBlank()) {
+            false
+        } else {
+            RetrofitInstance.api.createVocab(vocabVal)
+            true
         }
-
-        val createVocab = RetrofitInstance.api.createVocab(vocabVal)
-
-        return "Success";
-
-//        val vocabToCreate = vocabVal.copy(
-//            subjectId = createSubject.subjectId
-//        )
-//
-//        if (vocabToCreate.eng == "" || vocabToCreate.esp == "" || vocabToCreate.subjectId == null) {
-//            System.out.println("Empty Vocab")
-//            return
-//        }
-//
-//        RetrofitInstance.api.createVocab(vocabToCreate)
-
     } catch (e: Exception) {
         e.printStackTrace()
-        return "Fail";
+        false
     }
-
 }
