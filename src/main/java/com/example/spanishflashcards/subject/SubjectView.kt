@@ -34,6 +34,8 @@ import com.example.spanishflashcards.exam.ExamFunction
 import com.example.spanishflashcards.learn.LearnFunction
 import com.example.spanishflashcards.model.Subject
 import com.example.spanishflashcards.model.Vocab
+import com.example.spanishflashcards.vocab.ViewVocabFunction
+import com.example.spanishflashcards.subject.ViewSubjectEditDelete
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,7 +49,9 @@ import androidx.compose.ui.text.style.TextAlign
 enum class LearnScreen {
     LEARN,
     EXAM,
-    CREATE_VOCAB
+    CREATE_VOCAB,
+    VIEW_VOCAB,
+    VIEW_SUBJECT
 }
 
 @Composable
@@ -67,6 +71,10 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
 
     var vocabList: List<Vocab>? by remember {
         mutableStateOf(listOf< Vocab>())
+    }
+
+    var vocabId by remember {
+        mutableLongStateOf(0)
     }
 
     var refreshTrigger by remember { mutableIntStateOf(0) }
@@ -92,6 +100,21 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
         )
 
         LearnScreen.CREATE_VOCAB -> CreateVocabulary(
+            subjectId,
+            onBack = {
+                learnChoice = null
+                refreshTrigger++
+            }
+        )
+
+        LearnScreen.VIEW_VOCAB -> ViewVocabFunction(
+            vocabId,
+            onBack = {
+                learnChoice = null
+                refreshTrigger++
+            })
+
+        LearnScreen.VIEW_SUBJECT -> ViewSubjectEditDelete(
             subjectId,
             onBack = {
                 learnChoice = null
@@ -238,20 +261,26 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
 
                     // Scrollable vocabulary list
                     LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(vocabList.orEmpty()) { vocab ->
 
-                            Card(
+                            Button (
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(14.dp),
-                                colors = CardDefaults.cardColors(
+                                colors = ButtonDefaults.buttonColors(
                                     containerColor = Color.White
                                 ),
-                                elevation = CardDefaults.cardElevation(
+                                elevation = ButtonDefaults.buttonElevation(
                                     defaultElevation = 1.dp
-                                )
+                                ),
+                                onClick = {
+                                    vocabId = vocab.id
+                                    learnChoice = LearnScreen.VIEW_VOCAB
+                                }
                             ) {
                                 Text(
                                     text = vocab.esp,
@@ -268,10 +297,40 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
                             }
                         }
                     }
+
+                    // Edit Subject
+                    Button (
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE0E7FF),
+                            contentColor = Color(0xFF3730A3)
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 1.dp
+                        ),
+                        onClick = {
+                            learnChoice = LearnScreen.VIEW_SUBJECT
+                        }
+                    ) {
+                        Text(
+                            text = "Edit Subject",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = 18.dp,
+                                    vertical = 16.dp
+                                ),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF334155)
+                        )
+                    }
                 }
             }
 
         }
+
     }
 
 }

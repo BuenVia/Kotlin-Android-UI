@@ -261,3 +261,13 @@ suspend fun handleVocabSubmit(vocabVal: CreateVocab): Boolean {
         false
     }
 }
+
+@Composable
+fun editVocab(vocabId: Long, onBack: () -> Unit) {
+    // TODO write logic for editing a subject
+}
+
+@Composable
+fun deleteVocab(vocabId: Long, onBack: () -> Unit) {
+    // TODO write logic for deleting a subject
+}

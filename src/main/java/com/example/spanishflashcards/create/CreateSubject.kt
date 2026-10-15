@@ -222,3 +222,13 @@ suspend fun handleSubjectSubmit(
         false
     }
 }
+
+@Composable
+fun editSubject(subjectId: Long, onBack: () -> Unit) {
+    // TODO write logic for editing a subject
+}
+
+@Composable
+fun deleteSubject(subjectId: Long, onBack: () -> Unit) {
+    // TODO write logic for deleting a subject
+}
