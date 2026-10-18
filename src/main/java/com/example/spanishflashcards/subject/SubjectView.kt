@@ -109,6 +109,7 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
 
         LearnScreen.VIEW_VOCAB -> ViewVocabFunction(
             vocabId,
+            subjectId,
             onBack = {
                 learnChoice = null
                 refreshTrigger++
@@ -300,7 +301,7 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
 
                     // Edit Subject
                     Button (
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFE0E7FF),
