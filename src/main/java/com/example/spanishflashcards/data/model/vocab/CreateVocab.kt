@@ -1,4 +1,4 @@
-package com.example.spanishflashcards.model
+package com.example.spanishflashcards.data.model.vocab
 
 data class CreateVocab (
     val esp: String,

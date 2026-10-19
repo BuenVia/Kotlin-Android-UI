@@ -1,11 +1,11 @@
-package com.example.spanishflashcards.api
+package com.example.spanishflashcards.data.remote
 
-import com.example.spanishflashcards.model.CreateSubject
-import com.example.spanishflashcards.model.CreateSubjectResponse
-import com.example.spanishflashcards.model.CreateVocab
-import com.example.spanishflashcards.model.EditVocab
-import com.example.spanishflashcards.model.Subject
-import com.example.spanishflashcards.model.SubjectNames
+import com.example.spanishflashcards.data.model.subject.CreateSubject
+import com.example.spanishflashcards.data.model.subject.CreateSubjectResponse
+import com.example.spanishflashcards.data.model.vocab.CreateVocab
+import com.example.spanishflashcards.data.model.vocab.EditVocab
+import com.example.spanishflashcards.data.model.subject.Subject
+import com.example.spanishflashcards.data.model.subject.SubjectNames
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.POST

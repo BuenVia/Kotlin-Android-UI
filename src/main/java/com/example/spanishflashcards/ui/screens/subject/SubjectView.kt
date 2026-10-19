@@ -1,4 +1,4 @@
-package com.example.spanishflashcards.subject
+package com.example.spanishflashcards.ui.screens.subject
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,15 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.spanishflashcards.Screen
-import com.example.spanishflashcards.api.RetrofitInstance
-import com.example.spanishflashcards.create.CreateVocabulary
-import com.example.spanishflashcards.exam.ExamFunction
-import com.example.spanishflashcards.learn.LearnFunction
-import com.example.spanishflashcards.model.Subject
-import com.example.spanishflashcards.model.Vocab
-import com.example.spanishflashcards.vocab.ViewVocabFunction
-import com.example.spanishflashcards.subject.ViewSubjectEditDelete
+import com.example.spanishflashcards.data.remote.RetrofitInstance
+import com.example.spanishflashcards.ui.screens.vocab.CreateVocabulary
+import com.example.spanishflashcards.ui.screens.exam.ExamFunction
+import com.example.spanishflashcards.ui.screens.learn.LearnFunction
+import com.example.spanishflashcards.data.model.subject.Subject
+import com.example.spanishflashcards.data.model.vocab.Vocab
+import com.example.spanishflashcards.ui.screens.vocab.ViewVocabFunction
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

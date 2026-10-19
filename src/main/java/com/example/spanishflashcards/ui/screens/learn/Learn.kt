@@ -1,5 +1,5 @@
 
-package com.example.spanishflashcards.learn
+package com.example.spanishflashcards.ui.screens.learn
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -31,9 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.spanishflashcards.api.RetrofitInstance
-import com.example.spanishflashcards.model.Subject
-import com.example.spanishflashcards.model.Vocab
+import com.example.spanishflashcards.data.remote.RetrofitInstance
+import com.example.spanishflashcards.data.model.subject.Subject
+import com.example.spanishflashcards.data.model.vocab.Vocab
 
 @Composable
 fun LearnFunction(subjectId: Long, onBack: () -> Unit) {

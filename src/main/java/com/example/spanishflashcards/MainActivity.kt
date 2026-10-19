@@ -39,10 +39,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.spanishflashcards.api.RetrofitInstance
-import com.example.spanishflashcards.create.CreateFunction
-import com.example.spanishflashcards.model.SubjectNames
-import com.example.spanishflashcards.subject.SubjectViewFunction
+import com.example.spanishflashcards.data.remote.RetrofitInstance
+import com.example.spanishflashcards.ui.screens.subject.CreateFunction
+import com.example.spanishflashcards.data.model.subject.SubjectNames
+import com.example.spanishflashcards.ui.screens.subject.SubjectViewFunction
 import com.example.spanishflashcards.ui.theme.SpanishFlashcardsTheme
 
 class MainActivity : ComponentActivity() {

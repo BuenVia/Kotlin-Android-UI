@@ -1,9 +1,8 @@
 
-package com.example.spanishflashcards.exam
+package com.example.spanishflashcards.ui.screens.exam
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -36,9 +35,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.spanishflashcards.api.RetrofitInstance
-import com.example.spanishflashcards.model.Subject
-import com.example.spanishflashcards.model.Vocab
+import com.example.spanishflashcards.data.remote.RetrofitInstance
+import com.example.spanishflashcards.data.model.subject.Subject
+import com.example.spanishflashcards.data.model.vocab.Vocab
 
 @Composable
 fun ExamFunction(subjectId: Long, onBack: () -> Unit) {

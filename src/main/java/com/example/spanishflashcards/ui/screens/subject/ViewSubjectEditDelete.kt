@@ -1,4 +1,4 @@
-package com.example.spanishflashcards.subject
+package com.example.spanishflashcards.ui.screens.subject
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -31,10 +31,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.example.spanishflashcards.api.RetrofitInstance
+import com.example.spanishflashcards.data.remote.RetrofitInstance
 import com.example.spanishflashcards.mainHandler
-import com.example.spanishflashcards.model.Subject
-import com.example.spanishflashcards.vocab.ViewVocabDelete
+import com.example.spanishflashcards.data.model.subject.Subject
+import com.example.spanishflashcards.ui.screens.vocab.ViewVocabDelete
 import kotlinx.coroutines.launch
 
 enum class EditDeleteSubjectScreen {

@@ -1,5 +1,5 @@
 
-package com.example.spanishflashcards.create
+package com.example.spanishflashcards.ui.screens.subject
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -31,8 +31,8 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.spanishflashcards.api.RetrofitInstance
-import com.example.spanishflashcards.model.CreateSubject
+import com.example.spanishflashcards.data.remote.RetrofitInstance
+import com.example.spanishflashcards.data.model.subject.CreateSubject
 import kotlinx.coroutines.launch
 
 @Composable
