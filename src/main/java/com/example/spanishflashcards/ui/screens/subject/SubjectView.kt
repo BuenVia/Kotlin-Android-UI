@@ -1,5 +1,6 @@
 package com.example.spanishflashcards.ui.screens.subject
 
+import android.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -32,6 +35,8 @@ import com.example.spanishflashcards.ui.screens.learn.LearnFunction
 import com.example.spanishflashcards.data.model.subject.Subject
 import com.example.spanishflashcards.data.model.vocab.Vocab
 import com.example.spanishflashcards.ui.screens.vocab.ViewVocabFunction
+import com.mikepenz.markdown.m3.Markdown
+
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +45,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import com.example.spanishflashcards.data.model.note.Note
+import com.mikepenz.markdown.m3.markdownColor
+import com.mikepenz.markdown.model.MarkdownColors
 
 
 enum class LearnScreen {
@@ -65,6 +73,10 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
         mutableStateOf<Subject?>(null)
     }
 
+    var subjectNote by remember {
+        mutableStateOf<Note?>(null)
+    }
+
     var vocabList: List<Vocab>? by remember {
         mutableStateOf(listOf< Vocab>())
     }
@@ -75,9 +87,28 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
 
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
+//    val article = """
+//        # Learning Spanish
+//
+//        Learning a new language takes time,
+//        but consistency is key.
+//
+//        ## Three tips for beginners
+//
+//        - Practise every day.
+//        - Listen to Spanish podcasts.
+//        - Learn vocabulary in context.
+//
+//        **Tip:** Try to speak Spanish whenever possible.
+//
+//        *Small steps make a big difference.*
+//    """.trimIndent()
+
+
     LaunchedEffect(Unit, refreshTrigger) {
         try {
             subject = RetrofitInstance.api.getSubject(subjectId)
+            subjectNote = subject?.note
             vocabList = subject?.vocabs
         } catch (e: Exception) {
             e.printStackTrace()
@@ -124,31 +155,29 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0xFFF8F9FC))
-                    .padding(24.dp)
-            )
-            {
-
-                // Back button
-                Text(
-                    text = "← Back",
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .clickable {
-                            vocabList = listOf<Vocab>()
-                            onBack()
-                        }
-                        .padding(12.dp),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF475569)
-                )
-
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 56.dp),
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+
+                    // Back button
+                    Text(
+                        text = "← Back",
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .clickable {
+                                vocabList = listOf<Vocab>()
+                                onBack()
+                            }
+                            .padding(12.dp),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF475569)
+                    )
 
                     // Subject heading
                     Text(
@@ -159,7 +188,18 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Markdown article - takes its natural height
+                    Markdown(
+                        modifier = Modifier.fillMaxWidth(),
+                        content = subjectNote?.body.toString(),
+                        colors = markdownColor(
+                            text = Color(0xFF212121)
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
                         text = "Choose how you want to practise",
@@ -168,14 +208,13 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(28.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                    // Main actions
+                    // Learn and Exam buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-
                         Button(
                             onClick = {
                                 subjectChoice = subjectId
@@ -221,30 +260,6 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Secondary action
-                    Button(
-                        onClick = {
-                            subjectChoice = subjectId
-                            learnChoice = LearnScreen.CREATE_VOCAB
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
-                            contentColor = Color(0xFF475569)
-                        )
-                    ) {
-                        Text(
-                            text = "+  Create vocabulary",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(28.dp))
-
                     // Vocabulary section heading
                     Text(
                         text = "Vocabulary",
@@ -256,29 +271,14 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Scrollable vocabulary list
-                    LazyColumn(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
+                    // Vocabulary items - no nested LazyColumn
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(vocabList.orEmpty()) { vocab ->
+                        vocabList.orEmpty().forEach { vocab ->
 
-                            Button (
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.White
-                                ),
-                                elevation = ButtonDefaults.buttonElevation(
-                                    defaultElevation = 1.dp
-                                ),
-                                onClick = {
-                                    vocabId = vocab.id
-                                    learnChoice = LearnScreen.VIEW_VOCAB
-                                }
-                            ) {
+
                                 Text(
                                     text = vocab.esp,
                                     modifier = Modifier
@@ -291,38 +291,10 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
                                     fontWeight = FontWeight.Medium,
                                     color = Color(0xFF334155)
                                 )
-                            }
+
                         }
                     }
 
-                    // Edit Subject
-                    Button (
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE0E7FF),
-                            contentColor = Color(0xFF3730A3)
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 1.dp
-                        ),
-                        onClick = {
-                            learnChoice = LearnScreen.VIEW_SUBJECT
-                        }
-                    ) {
-                        Text(
-                            text = "Edit Subject",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    horizontal = 18.dp,
-                                    vertical = 16.dp
-                                ),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF334155)
-                        )
-                    }
                 }
             }
 

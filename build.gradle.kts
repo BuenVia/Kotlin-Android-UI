@@ -54,4 +54,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+    implementation("com.mikepenz:multiplatform-markdown-renderer:0.41.0")
+    implementation("com.mikepenz:multiplatform-markdown-renderer-m3:0.41.0")
 }
