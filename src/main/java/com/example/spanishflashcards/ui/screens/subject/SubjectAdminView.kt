@@ -1,6 +1,5 @@
 package com.example.spanishflashcards.ui.screens.subject
 
-import android.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,14 +39,12 @@ import com.mikepenz.markdown.m3.Markdown
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.example.spanishflashcards.data.model.note.Note
+import com.example.spanishflashcards.data.model.lesson.Lesson
+import com.example.spanishflashcards.ui.screens.lesson.CreateLessonView
 import com.mikepenz.markdown.m3.markdownColor
-import com.mikepenz.markdown.model.MarkdownColors
 
 
 enum class LearnAdminScreen {
@@ -73,8 +70,8 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
         mutableStateOf<Subject?>(null)
     }
 
-    var subjectNote by remember {
-        mutableStateOf<Note?>(null)
+    var subjectLesson by remember {
+        mutableStateOf<Lesson?>(null)
     }
 
 
@@ -109,7 +106,7 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
     LaunchedEffect(Unit, refreshTrigger) {
         try {
             subject = RetrofitInstance.api.getSubject(subjectId)
-            subjectNote = subject?.note
+            subjectLesson = subject?.lesson
             vocabList = subject?.vocabs
         } catch (e: Exception) {
             e.printStackTrace()
@@ -144,6 +141,14 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
             })
 
         LearnScreen.VIEW_SUBJECT -> ViewSubjectEditDelete(
+            subjectId,
+            onBack = {
+                learnChoice = null
+                refreshTrigger++
+            }
+        )
+
+        LearnScreen.CREATE_LESSON -> CreateLessonView(
             subjectId,
             onBack = {
                 learnChoice = null
@@ -191,14 +196,38 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Markdown article - takes its natural height
-                    Markdown(
-                        modifier = Modifier.fillMaxWidth(),
-                        content = subjectNote?.body.toString(),
-                        colors = markdownColor(
-                            text = Color(0xFF212121)
+                    // Lesson
+                    if (subjectLesson != null) {
+                        Markdown(
+                            modifier = Modifier.fillMaxWidth(),
+                            content = subjectLesson?.body.toString(),
+                            colors = markdownColor(
+                                text = Color(0xFF212121)
+                            )
                         )
-                    )
+
+                    } else {
+                        Button(
+                            onClick = {
+                                subjectChoice = subjectId
+                                learnChoice = LearnScreen.CREATE_LESSON
+                            },
+                            modifier = Modifier
+                                    .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White,
+                                contentColor = Color(0xFF475569)
+                            )
+                        ) {
+                            Text(
+                                text = "Create a Lesson",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(24.dp))
 

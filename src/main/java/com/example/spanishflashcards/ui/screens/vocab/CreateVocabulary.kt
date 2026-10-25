@@ -1,4 +1,3 @@
-
 package com.example.spanishflashcards.ui.screens.vocab
 
 import androidx.compose.foundation.background

@@ -1,6 +1,5 @@
 package com.example.spanishflashcards.ui.screens.subject
 
-import android.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,14 +39,12 @@ import com.mikepenz.markdown.m3.Markdown
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.example.spanishflashcards.data.model.note.Note
+import com.example.spanishflashcards.data.model.lesson.Lesson
+import com.example.spanishflashcards.ui.screens.lesson.CreateLessonView
 import com.mikepenz.markdown.m3.markdownColor
-import com.mikepenz.markdown.model.MarkdownColors
 
 
 enum class LearnScreen {
@@ -55,7 +52,8 @@ enum class LearnScreen {
     EXAM,
     CREATE_VOCAB,
     VIEW_VOCAB,
-    VIEW_SUBJECT
+    VIEW_SUBJECT,
+    CREATE_LESSON
 }
 
 @Composable
@@ -73,8 +71,8 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
         mutableStateOf<Subject?>(null)
     }
 
-    var subjectNote by remember {
-        mutableStateOf<Note?>(null)
+    var subjectLesson by remember {
+        mutableStateOf<Lesson?>(null)
     }
 
     var vocabList: List<Vocab>? by remember {
@@ -108,7 +106,7 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
     LaunchedEffect(Unit, refreshTrigger) {
         try {
             subject = RetrofitInstance.api.getSubject(subjectId)
-            subjectNote = subject?.note
+            subjectLesson = subject?.lesson
             vocabList = subject?.vocabs
         } catch (e: Exception) {
             e.printStackTrace()
@@ -140,9 +138,18 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
             onBack = {
                 learnChoice = null
                 refreshTrigger++
-            })
+            }
+        )
 
         LearnScreen.VIEW_SUBJECT -> ViewSubjectEditDelete(
+            subjectId,
+            onBack = {
+                learnChoice = null
+                refreshTrigger++
+            }
+        )
+
+        LearnScreen.CREATE_LESSON -> CreateLessonView(
             subjectId,
             onBack = {
                 learnChoice = null
@@ -193,7 +200,7 @@ fun SubjectViewFunction(subjectId: Long, onBack: () -> Unit) {
                     // Markdown article - takes its natural height
                     Markdown(
                         modifier = Modifier.fillMaxWidth(),
-                        content = subjectNote?.body.toString(),
+                        content = subjectLesson?.body.toString(),
                         colors = markdownColor(
                             text = Color(0xFF212121)
                         )
