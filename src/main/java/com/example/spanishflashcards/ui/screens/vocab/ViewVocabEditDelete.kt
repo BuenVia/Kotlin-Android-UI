@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.example.spanishflashcards.data.remote.RetrofitInstance
 //import com.example.spanishflashcards.data.model.vocab.Vocab
 import com.example.spanishflashcards.data.model.vocab.EditVocab
+import com.example.spanishflashcards.ui.screens.subject.SubjectAdminViewFunction
 import com.example.spanishflashcards.ui.screens.subject.SubjectViewFunction
 import kotlinx.coroutines.launch
 
@@ -85,7 +86,7 @@ fun ViewVocabFunction(vocabId: Long, subjectId: Long, onBack: () -> Unit) {
             onBack = { editChoice = EditDeleteScreen.SUBJECT }
         )
 
-        EditDeleteScreen.SUBJECT -> SubjectViewFunction(
+        EditDeleteScreen.SUBJECT -> SubjectAdminViewFunction(
             subjectId,
             onBack = {
                 editChoice = null

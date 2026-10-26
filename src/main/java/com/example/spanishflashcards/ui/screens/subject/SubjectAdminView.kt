@@ -42,8 +42,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.example.spanishflashcards.data.model.lesson.Lesson
+import com.example.spanishflashcards.data.model.EditLesson.Lesson
 import com.example.spanishflashcards.ui.screens.lesson.CreateLessonView
+import com.example.spanishflashcards.ui.screens.lesson.EditLessonView
 import com.mikepenz.markdown.m3.markdownColor
 
 
@@ -52,14 +53,16 @@ enum class LearnAdminScreen {
     EXAM,
     CREATE_VOCAB,
     VIEW_VOCAB,
-    VIEW_SUBJECT
+    VIEW_SUBJECT,
+    CREATE_LESSON,
+    EDIT_LESSON
 }
 
 @Composable
 fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
 
     var learnChoice by remember {
-        mutableStateOf<LearnScreen?>(null)
+        mutableStateOf<LearnAdminScreen?>(null)
     }
 
     var subjectChoice by remember {
@@ -85,24 +88,6 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
 
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
-//    val article = """
-//        # Learning Spanish
-//
-//        Learning a new language takes time,
-//        but consistency is key.
-//
-//        ## Three tips for beginners
-//
-//        - Practise every day.
-//        - Listen to Spanish podcasts.
-//        - Learn vocabulary in context.
-//
-//        **Tip:** Try to speak Spanish whenever possible.
-//
-//        *Small steps make a big difference.*
-//    """.trimIndent()
-
-
     LaunchedEffect(Unit, refreshTrigger) {
         try {
             subject = RetrofitInstance.api.getSubject(subjectId)
@@ -114,17 +99,17 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
     }
 
     when (learnChoice) {
-        LearnScreen.LEARN -> LearnFunction(
+        LearnAdminScreen.LEARN -> LearnFunction(
             subjectId,
             onBack = { learnChoice = null }
         )
 
-        LearnScreen.EXAM -> ExamFunction(
+        LearnAdminScreen.EXAM -> ExamFunction(
             subjectId,
             onBack = { learnChoice = null }
         )
 
-        LearnScreen.CREATE_VOCAB -> CreateVocabulary(
+        LearnAdminScreen.CREATE_VOCAB -> CreateVocabulary(
             subjectId,
             onBack = {
                 learnChoice = null
@@ -132,7 +117,7 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
             }
         )
 
-        LearnScreen.VIEW_VOCAB -> ViewVocabFunction(
+        LearnAdminScreen.VIEW_VOCAB -> ViewVocabFunction(
             vocabId,
             subjectId,
             onBack = {
@@ -140,7 +125,7 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
                 refreshTrigger++
             })
 
-        LearnScreen.VIEW_SUBJECT -> ViewSubjectEditDelete(
+        LearnAdminScreen.VIEW_SUBJECT -> ViewSubjectEditDelete(
             subjectId,
             onBack = {
                 learnChoice = null
@@ -148,7 +133,16 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
             }
         )
 
-        LearnScreen.CREATE_LESSON -> CreateLessonView(
+        LearnAdminScreen.CREATE_LESSON -> CreateLessonView(
+            subjectId,
+            onBack = {
+                learnChoice = null
+                refreshTrigger++
+            }
+        )
+
+        LearnAdminScreen.EDIT_LESSON -> EditLessonView(
+            lessonId=subject?.lesson?.id ?: 0,
             subjectId,
             onBack = {
                 learnChoice = null
@@ -198,6 +192,15 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
 
                     // Lesson
                     if (subjectLesson != null) {
+
+                        Text(
+                            text = subjectLesson?.lessonTitle.toString(),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
                         Markdown(
                             modifier = Modifier.fillMaxWidth(),
                             content = subjectLesson?.body.toString(),
@@ -206,11 +209,34 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
                             )
                         )
 
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Button(
+                            onClick = {
+                                subjectChoice = subjectId
+                                learnChoice = LearnAdminScreen.EDIT_LESSON
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White,
+                                contentColor = Color(0xFF475569)
+                            )
+                        ) {
+                            Text(
+                                text = "Edit a Lesson",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
                     } else {
                         Button(
                             onClick = {
                                 subjectChoice = subjectId
-                                learnChoice = LearnScreen.CREATE_LESSON
+                                learnChoice = LearnAdminScreen.CREATE_LESSON
                             },
                             modifier = Modifier
                                     .fillMaxWidth()
@@ -248,7 +274,7 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
                         Button(
                             onClick = {
                                 subjectChoice = subjectId
-                                learnChoice = LearnScreen.LEARN
+                                learnChoice = LearnAdminScreen.LEARN
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -269,7 +295,7 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
                         Button(
                             onClick = {
                                 subjectChoice = subjectId
-                                learnChoice = LearnScreen.EXAM
+                                learnChoice = LearnAdminScreen.EXAM
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -294,7 +320,7 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
                     Button(
                         onClick = {
                             subjectChoice = subjectId
-                            learnChoice = LearnScreen.CREATE_VOCAB
+                            learnChoice = LearnAdminScreen.CREATE_VOCAB
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -343,7 +369,7 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
                                 ),
                                 onClick = {
                                     vocabId = vocab.id
-                                    learnChoice = LearnScreen.VIEW_VOCAB
+                                    learnChoice = LearnAdminScreen.VIEW_VOCAB
                                 }
                             ) {
                                 Text(
@@ -378,7 +404,7 @@ fun SubjectAdminViewFunction(subjectId: Long, onBack: () -> Unit) {
                             defaultElevation = 1.dp
                         ),
                         onClick = {
-                            learnChoice = LearnScreen.VIEW_SUBJECT
+                            learnChoice = LearnAdminScreen.VIEW_SUBJECT
                         }
                     ) {
                         Text(

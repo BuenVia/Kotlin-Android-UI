@@ -30,9 +30,8 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.spanishflashcards.data.model.lesson.CreateLesson
+import com.example.spanishflashcards.data.model.EditLesson.CreateLesson
 import com.example.spanishflashcards.data.remote.RetrofitInstance
-import com.example.spanishflashcards.ui.screens.vocab.handleVocabSubmit
 import kotlinx.coroutines.launch
 
 @Composable

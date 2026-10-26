@@ -1,4 +1,4 @@
-package com.example.spanishflashcards.data.model.lesson
+package com.example.spanishflashcards.data.model.EditLesson
 
 data class Lesson (
     val id: Long,

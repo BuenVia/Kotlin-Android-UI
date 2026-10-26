@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         // Set Admin mode - for dev purposes only
-        val adminMode = true
+        val adminMode = false
 
         setContent {
             SpanishFlashcardsTheme {

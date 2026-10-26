@@ -1,7 +1,8 @@
 package com.example.spanishflashcards.data.remote
 
-import com.example.spanishflashcards.data.model.lesson.CreateLesson
-import com.example.spanishflashcards.data.model.lesson.Lesson
+import com.example.spanishflashcards.data.model.EditLesson.CreateLesson
+import com.example.spanishflashcards.data.model.EditLesson.EditLesson
+import com.example.spanishflashcards.data.model.EditLesson.Lesson
 import com.example.spanishflashcards.data.model.subject.CreateSubject
 import com.example.spanishflashcards.data.model.subject.CreateSubjectResponse
 import com.example.spanishflashcards.data.model.vocab.CreateVocab
@@ -69,17 +70,17 @@ interface FlashcardApi {
     @GET("/lesson/get/{id}")
     suspend fun getLesson(
         @Path("id") id: Long
-    ): Lesson
+    ): EditLesson
 
     @POST("/lesson/create")
     suspend fun createLesson(
-        @Body lesson: CreateLesson
+        @Body createLesson: CreateLesson
         ): Lesson
 
     @PUT("/lesson/update/{id}")
     suspend fun updateLesson(
         @Path("id") id: Long,
-        @Body lesson: Lesson?
+        @Body editLesson: EditLesson?
     ): Lesson
 
 }

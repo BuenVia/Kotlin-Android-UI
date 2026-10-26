@@ -42,7 +42,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.example.spanishflashcards.data.model.lesson.Lesson
+import com.example.spanishflashcards.data.model.EditLesson.Lesson
 import com.example.spanishflashcards.ui.screens.lesson.CreateLessonView
 import com.mikepenz.markdown.m3.markdownColor
 
@@ -53,7 +53,7 @@ enum class LearnScreen {
     CREATE_VOCAB,
     VIEW_VOCAB,
     VIEW_SUBJECT,
-    CREATE_LESSON
+    CREATE_LESSON,
 }
 
 @Composable
