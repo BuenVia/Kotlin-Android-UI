@@ -1,8 +1,8 @@
 package com.example.spanishflashcards.data.remote
 
-import com.example.spanishflashcards.data.model.EditLesson.CreateLesson
-import com.example.spanishflashcards.data.model.EditLesson.EditLesson
-import com.example.spanishflashcards.data.model.EditLesson.Lesson
+import com.example.spanishflashcards.data.model.lesson.CreateLesson
+import com.example.spanishflashcards.data.model.lesson.EditLesson
+import com.example.spanishflashcards.data.model.lesson.Lesson
 import com.example.spanishflashcards.data.model.subject.CreateSubject
 import com.example.spanishflashcards.data.model.subject.CreateSubjectResponse
 import com.example.spanishflashcards.data.model.vocab.CreateVocab

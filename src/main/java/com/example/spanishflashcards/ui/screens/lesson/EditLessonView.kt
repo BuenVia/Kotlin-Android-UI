@@ -1,23 +1,17 @@
 package com.example.spanishflashcards.ui.screens.lesson
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,18 +21,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.example.spanishflashcards.data.model.EditLesson.EditLesson
-import com.example.spanishflashcards.data.model.EditLesson.Lesson
+import com.example.spanishflashcards.data.model.lesson.EditLesson
+import com.example.spanishflashcards.data.model.lesson.Lesson
 import com.example.spanishflashcards.data.remote.RetrofitInstance
-import com.example.spanishflashcards.ui.screens.subject.SubjectAdminViewFunction
-import com.example.spanishflashcards.ui.screens.subject.SubjectViewFunction
-import com.example.spanishflashcards.ui.screens.vocab.EditDeleteScreen
-import com.example.spanishflashcards.ui.screens.vocab.handleVocabEdit
 import kotlinx.coroutines.launch
+import com.example.spanishflashcards.ui.utils.AppScreen
+import com.example.spanishflashcards.ui.utils.ScreenTitle
+import com.example.spanishflashcards.ui.theme.ButtonShape
+import com.example.spanishflashcards.ui.theme.primaryButtonColors
+import com.example.spanishflashcards.ui.theme.appTextFieldColors
 
 
 @Composable
@@ -47,10 +41,6 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
 
-    val primaryColor = Color(0xFF4F46E5)
-    val backgroundColor = Color(0xFFF8F9FC)
-    val textColor = Color(0xFF1F2937)
-    val secondaryTextColor = Color(0xFF6B7280)
 
     var lesson by remember {
         mutableStateOf<EditLesson?>(null)
@@ -73,27 +63,7 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
         }
     }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(backgroundColor)
-                    .padding(horizontal = 24.dp, vertical = 20.dp)
-            ) {
-                // Back button
-                Button(
-                    onClick = { onBack() },
-                    enabled = !isLoading,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 8.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE0E7FF),
-                        contentColor = primaryColor
-                    )
-                ) {
-                    Text("Back")
-                }
+            AppScreen(onBack = onBack, backEnabled = !isLoading) {
 
                 Column(
                     modifier = Modifier
@@ -102,8 +72,9 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    Text(text = "Edit or Delete Lesson - " + lessonId)
+                    ScreenTitle(text = "Edit Lesson")
 
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Column(
                         modifier = Modifier.padding(10.dp),
@@ -120,18 +91,8 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             enabled = !isLoading,
-                            shape = RoundedCornerShape(14.dp),
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White,
-                                disabledContainerColor = Color.White,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                cursorColor = primaryColor,
-                                focusedLabelColor = primaryColor,
-                                unfocusedLabelColor = secondaryTextColor,
-                                focusedTextColor = textColor
-                            ),
+                            shape = ButtonShape,
+                            colors = appTextFieldColors(),
                             keyboardOptions = KeyboardOptions(
                                 imeAction = ImeAction.Next
                             ),
@@ -156,17 +117,8 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
                             minLines = 10,
                             maxLines = 20,
                             enabled = !isLoading,
-                            shape = RoundedCornerShape(14.dp),
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White,
-                                disabledContainerColor = Color.White,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                cursorColor = primaryColor,
-                                focusedLabelColor = primaryColor,
-                                unfocusedLabelColor = secondaryTextColor
-                            ),
+                            shape = ButtonShape,
+                            colors = appTextFieldColors(),
                             keyboardOptions = KeyboardOptions(
                                 imeAction = ImeAction.Default
                             )
@@ -205,13 +157,8 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(52.dp),
-                                shape = RoundedCornerShape(14.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = primaryColor,
-                                    contentColor = Color.White,
-                                    disabledContainerColor = Color(0xFFC7C9F8),
-                                    disabledContentColor = Color.White
-                                )
+                                shape = ButtonShape,
+                                colors = primaryButtonColors()
                             ) {
                                 Text("Edit")
                             }

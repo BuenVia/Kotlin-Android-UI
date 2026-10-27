@@ -1,22 +1,15 @@
 package com.example.spanishflashcards.ui.screens.lesson
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,14 +18,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.spanishflashcards.data.model.EditLesson.CreateLesson
+import com.example.spanishflashcards.data.model.lesson.CreateLesson
 import com.example.spanishflashcards.data.remote.RetrofitInstance
 import kotlinx.coroutines.launch
+import com.example.spanishflashcards.ui.utils.AppScreen
+import com.example.spanishflashcards.ui.utils.ScreenTitle
+import com.example.spanishflashcards.ui.theme.CustomColors
+import com.example.spanishflashcards.ui.theme.ButtonShape
+import com.example.spanishflashcards.ui.theme.primaryButtonColors
+import com.example.spanishflashcards.ui.theme.appTextFieldColors
 
 @Composable
 fun CreateLessonView(subjectId: Long, onBack: () -> Unit) {
@@ -58,33 +56,8 @@ fun CreateLessonView(subjectId: Long, onBack: () -> Unit) {
         mutableStateOf("")
     }
 
-    val primaryColor = Color(0xFF4F46E5)
-    val backgroundColor = Color(0xFFF8F9FC)
-    val textColor = Color(0xFF1F2937)
-    val secondaryTextColor = Color(0xFF6B7280)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-            .padding(24.dp)
-    ) {
-
-        // Back button
-        Button(
-            onClick = { onBack() },
-            enabled = !isLoading,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 8.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFE0E7FF),
-                contentColor = primaryColor
-            )
-        ) {
-            Text("Back")
-        }
+    AppScreen(onBack = onBack, backEnabled = !isLoading) {
 
             Column(
                 modifier = Modifier
@@ -93,11 +66,7 @@ fun CreateLessonView(subjectId: Long, onBack: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                Text(
-                    text = "Create a Lesson",
-                    fontSize = 26.sp,
-                    color = textColor
-                )
+                ScreenTitle(text = "Create a Lesson")
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -113,17 +82,8 @@ fun CreateLessonView(subjectId: Long, onBack: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     enabled = !isLoading,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        disabledContainerColor = Color.White,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = primaryColor,
-                        focusedLabelColor = primaryColor,
-                        unfocusedLabelColor = secondaryTextColor
-                    ),
+                    shape = ButtonShape,
+                    colors = appTextFieldColors(),
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Next
                     ),
@@ -149,17 +109,8 @@ fun CreateLessonView(subjectId: Long, onBack: () -> Unit) {
                     minLines = 10,
                     maxLines = 20,
                     enabled = !isLoading,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        disabledContainerColor = Color.White,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = primaryColor,
-                        focusedLabelColor = primaryColor,
-                        unfocusedLabelColor = secondaryTextColor
-                    ),
+                    shape = ButtonShape,
+                    colors = appTextFieldColors(),
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Default
                     ),
@@ -177,7 +128,7 @@ fun CreateLessonView(subjectId: Long, onBack: () -> Unit) {
                     Text(
                         text = errorMessage,
                         fontSize = 14.sp,
-                        color = Color(0xFFB91C1C)
+                        color = CustomColors.errorColor
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -212,18 +163,13 @@ fun CreateLessonView(subjectId: Long, onBack: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryColor,
-                        contentColor = Color.White,
-                        disabledContainerColor = Color(0xFFC7C9F8),
-                        disabledContentColor = Color.White
-                    )
+                    shape = ButtonShape,
+                    colors = primaryButtonColors()
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.height(22.dp),
-                            color = Color.White,
+                            color = CustomColors.surfaceColor,
                             strokeWidth = 2.dp
                         )
                     } else {
