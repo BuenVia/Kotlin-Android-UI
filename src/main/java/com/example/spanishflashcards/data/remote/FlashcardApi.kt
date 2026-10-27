@@ -1,5 +1,8 @@
 package com.example.spanishflashcards.data.remote
 
+import com.example.spanishflashcards.data.model.lesson.CreateLesson
+import com.example.spanishflashcards.data.model.lesson.EditLesson
+import com.example.spanishflashcards.data.model.lesson.Lesson
 import com.example.spanishflashcards.data.model.subject.CreateSubject
 import com.example.spanishflashcards.data.model.subject.CreateSubjectResponse
 import com.example.spanishflashcards.data.model.vocab.CreateVocab
@@ -62,5 +65,22 @@ interface FlashcardApi {
     suspend fun deleteVocab(
         @Path("id") id: Long
     ): Response<Unit>
+
+    // LESSON
+    @GET("/lesson/get/{id}")
+    suspend fun getLesson(
+        @Path("id") id: Long
+    ): EditLesson
+
+    @POST("/lesson/create")
+    suspend fun createLesson(
+        @Body createLesson: CreateLesson
+        ): Lesson
+
+    @PUT("/lesson/update/{id}")
+    suspend fun updateLesson(
+        @Path("id") id: Long,
+        @Body editLesson: EditLesson?
+    ): Lesson
 
 }

@@ -1,16 +1,10 @@
 package com.example.spanishflashcards.ui.screens.vocab
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,13 +14,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.spanishflashcards.data.remote.RetrofitInstance
+import com.example.spanishflashcards.ui.theme.secondaryButtonColors
+import com.example.spanishflashcards.ui.utils.AppScreen
+import com.example.spanishflashcards.ui.utils.ScreenTitle
 import kotlinx.coroutines.launch
+import com.example.spanishflashcards.ui.theme.CustomColors
+import com.example.spanishflashcards.ui.theme.ButtonShape
+import com.example.spanishflashcards.ui.theme.primaryButtonColors
 
 @Composable
-fun ViewVocabDelete(delType: String, itemId: Long, onBack: () -> Unit) {
+fun ViewVocabDelete(delType: DeleteType, itemId: Long, onDeleted: () -> Unit, onCancel: () -> Unit) {
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -38,17 +39,8 @@ fun ViewVocabDelete(delType: String, itemId: Long, onBack: () -> Unit) {
         mutableStateOf("")
     }
 
-    val primaryColor = Color(0xFF4F46E5)
-    val backgroundColor = Color(0xFFF8F9FC)
-    val textColor = Color(0xFF1F2937)
-    val secondaryTextColor = Color(0xFF6B7280)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-            .padding(horizontal = 24.dp, vertical = 20.dp)
-    ) {
+    AppScreen(onBack = onCancel, backEnabled = !isLoading) {
 
         Column(
             modifier = Modifier
@@ -57,9 +49,18 @@ fun ViewVocabDelete(delType: String, itemId: Long, onBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Text("Are you sure you want to delete? This action cannot be undone.")
+            ScreenTitle(text = "Confirm Deletion")
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "Are you sure you want to delete? This action cannot be undone.",
+                fontSize = 14.sp,
+                color = CustomColors.secondaryTextColor,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
 
             Button(
                 onClick = {
@@ -67,28 +68,17 @@ fun ViewVocabDelete(delType: String, itemId: Long, onBack: () -> Unit) {
                     coroutineScope.launch {
                         isLoading = true
                         errorMessage = ""
-                        if (delType == "VOCAB") {
-                            val result = handleVocabDelete(itemId)
-                            isLoading = false
+                        val (result, itemName) = when (delType) {
+                            DeleteType.VOCAB -> handleVocabDelete(itemId) to "vocab"
+                            DeleteType.SUBJECT -> handleSubjectDelete(itemId) to "subject"
+                        }
+                        isLoading = false
 
-                            if (result) {
-                                onBack()
-                            } else {
-                                errorMessage =
-                                    "Unable to delete the vocab. Please try again."
-                            }
-                        } else if (delType == "SUBJECT") {
-                            val result = handleSubjectDelete(itemId)
-                            isLoading = false
-
-                            if (result) {
-                                onBack()
-                            } else {
-                                errorMessage =
-                                    "Unable to delete the subject. Please try again."
-                            }
+                        if (result) {
+                            onDeleted()
                         } else {
-                            onBack()
+                            errorMessage =
+                                "Unable to delete the $itemName. Please try again."
                         }
                     }
 
@@ -97,21 +87,24 @@ fun ViewVocabDelete(delType: String, itemId: Long, onBack: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryColor,
-                    contentColor = Color.White,
-                    disabledContainerColor = Color(0xFFC7C9F8),
-                    disabledContentColor = Color.White
-                )
+                shape = ButtonShape,
+                colors = primaryButtonColors()
             ) {
                 Text("Confirm Deletion")
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
             Button(
                 onClick = {
-                    onBack()
-                }
+                    onCancel()
+                },
+                enabled = !isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = ButtonShape,
+                colors = secondaryButtonColors()
             ) {
                 Text("Cancel")
             }
