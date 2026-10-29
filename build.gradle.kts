@@ -16,7 +16,7 @@ android {
         targetSdk = 37
         versionCode = 1
         // Shown in the home screen footer - bump this for each release
-        versionName = "1.0.2"
+        versionName = "1.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

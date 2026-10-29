@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.spanishflashcards.data.model.language.CurrentLanguage
 import com.example.spanishflashcards.data.remote.RetrofitInstance
 import com.example.spanishflashcards.ui.theme.secondaryButtonColors
 import com.example.spanishflashcards.ui.utils.AppScreen
@@ -61,6 +62,18 @@ fun ViewVocabDelete(delType: DeleteType, itemId: Long, onDeleted: () -> Unit, on
             )
 
             Spacer(modifier = Modifier.height(28.dp))
+
+            // Error feedback
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    fontSize = 14.sp,
+                    color = CustomColors.errorColor,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             Button(
                 onClick = {
@@ -116,7 +129,7 @@ fun ViewVocabDelete(delType: DeleteType, itemId: Long, onDeleted: () -> Unit, on
 
 suspend fun handleVocabDelete(vocabId: Long): Boolean {
     return try {
-        val res = RetrofitInstance.api.deleteVocab(vocabId)
+        val res = RetrofitInstance.api.deleteVocab(CurrentLanguage.pathSegment, vocabId)
         res.isSuccessful
     } catch (e: Exception) {
         e.printStackTrace()
@@ -126,7 +139,7 @@ suspend fun handleVocabDelete(vocabId: Long): Boolean {
 
 suspend fun handleSubjectDelete(subjectId: Long): Boolean {
     return try {
-        val res = RetrofitInstance.api.deleteSubject((subjectId))
+        val res = RetrofitInstance.api.deleteSubject(CurrentLanguage.pathSegment, subjectId)
         res.isSuccessful
 
     } catch (e: Exception) {

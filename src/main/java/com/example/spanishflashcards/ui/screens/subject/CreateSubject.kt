@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -23,6 +24,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.spanishflashcards.data.model.language.CurrentLanguage
 import com.example.spanishflashcards.data.remote.RetrofitInstance
 import com.example.spanishflashcards.data.model.subject.CreateSubject
 import kotlinx.coroutines.launch
@@ -39,9 +41,12 @@ fun CreateFunction(onBack: () -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
 
-    var subjectVal by remember {
-        mutableStateOf(CreateSubject(subjectName = ""))
+    // Saveable so typed text survives rotating the screen
+    var subjectName by rememberSaveable {
+        mutableStateOf("")
     }
+
+    val subjectVal = CreateSubject(subjectName = subjectName)
 
     var isLoading by remember {
         mutableStateOf(false)
@@ -78,7 +83,7 @@ fun CreateFunction(onBack: () -> Unit) {
             TextField(
                 value = subjectVal.subjectName,
                 onValueChange = {
-                    subjectVal = subjectVal.copy(subjectName = it)
+                    subjectName = it
                     errorMessage = ""
                 },
                 label = {
@@ -169,7 +174,7 @@ suspend fun handleSubjectSubmit(
         if (subjectVal.subjectName.isBlank()) {
             false
         } else {
-            RetrofitInstance.api.createSubject(subjectVal)
+            RetrofitInstance.api.createSubject(CurrentLanguage.pathSegment, subjectVal)
             true
         }
     } catch (e: Exception) {

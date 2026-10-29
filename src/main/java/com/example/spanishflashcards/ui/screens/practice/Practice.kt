@@ -1,5 +1,5 @@
 
-package com.example.spanishflashcards.ui.screens.exam
+package com.example.spanishflashcards.ui.screens.practice
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,18 +32,20 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.spanishflashcards.data.model.language.CurrentLanguage
 import com.example.spanishflashcards.data.remote.RetrofitInstance
 import com.example.spanishflashcards.data.model.subject.Subject
 import com.example.spanishflashcards.data.model.vocab.Vocab
 import com.example.spanishflashcards.ui.theme.CustomColors
 import com.example.spanishflashcards.ui.utils.AppScreen
+import com.example.spanishflashcards.ui.utils.LoadError
 import com.example.spanishflashcards.ui.utils.ScreenTitle
 import com.example.spanishflashcards.ui.theme.ButtonShape
 import com.example.spanishflashcards.ui.theme.primaryButtonColors
 import com.example.spanishflashcards.ui.theme.appTextFieldColors
 
 @Composable
-fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
+fun PracticeView(subjectId: Long, onBack: () -> Unit) {
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -54,35 +57,50 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
         mutableStateOf<List<Vocab>>(emptyList())
     }
 
-    var indexNum by remember {
+    // Progress is saveable so rotating the screen doesn't restart the practice.
+    // The subject itself is reloaded from the API after a rotation.
+    var indexNum by rememberSaveable {
         mutableIntStateOf(0)
     }
 
-    var userAnswer by remember {
+    var userAnswer by rememberSaveable {
         mutableStateOf("")
     }
 
-    var result by remember {
+    var result by rememberSaveable {
         mutableStateOf("")
     }
 
-    var showNext by remember {
+    var showNext by rememberSaveable {
         mutableStateOf(false)
     }
 
+    var loadFailed by remember {
+        mutableStateOf(false)
+    }
 
-    var feedbackColor by remember {
-        mutableStateOf(CustomColors.accentColor)
+    // Bumped by the Retry button to run the load again
+    var loadAttempt by remember {
+        mutableIntStateOf(0)
+    }
+
+    // Derived from the answer state rather than stored, so it is restored along with it
+    val feedbackColor = when {
+        result.isEmpty() -> CustomColors.accentColor
+        showNext -> CustomColors.successColor
+        else -> CustomColors.errorColor
     }
 
     val lenVocabs = subject?.vocabs?.size ?: 0
 
-    LaunchedEffect(subjectId) {
+    LaunchedEffect(subjectId, loadAttempt) {
+        loadFailed = false
         try {
-            subject = RetrofitInstance.api.getSubject(subjectId)
+            subject = RetrofitInstance.api.getSubject(CurrentLanguage.pathSegment, subjectId)
             vocabList = subject?.vocabs ?: emptyList()
         } catch (e: Exception) {
             e.printStackTrace()
+            loadFailed = true
         }
     }
 
@@ -90,10 +108,8 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
         if (answer.trim().equals(correctAnswer, ignoreCase = true)) {
             result = "Correct!"
             showNext = true
-            feedbackColor = CustomColors.successColor
         } else {
             result = "Incorrect. Try again."
-            feedbackColor = CustomColors.errorColor
         }
     }
 
@@ -106,7 +122,14 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            if (subject == null) {
+            if (subject == null && loadFailed) {
+
+                LoadError(
+                    message = "Unable to load this subject. Please try again.",
+                    onRetry = { loadAttempt++ }
+                )
+
+            } else if (subject == null) {
 
                 Text(
                     text = "Loading...",
@@ -153,7 +176,7 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                     ) {
                         Text(
                             text = subject?.vocabs
-                                ?.getOrNull(indexNum)?.eng
+                                ?.getOrNull(indexNum)?.translation
                                 ?: "",
                             fontSize = 32.sp,
                             color = CustomColors.textColor
@@ -169,7 +192,6 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                     onValueChange = {
                         userAnswer = it
                         result = ""
-                        feedbackColor = CustomColors.accentColor
                     },
                     label = {
                         Text("Your answer")
@@ -198,7 +220,7 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                                 checkAnswer(
                                     userAnswer,
                                     subject?.vocabs
-                                        ?.getOrNull(indexNum)?.esp ?: ""
+                                        ?.getOrNull(indexNum)?.term ?: ""
                                 )
                             }
                             keyboardController?.hide()
@@ -225,7 +247,7 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                             checkAnswer(
                                 userAnswer,
                                 subject?.vocabs
-                                    ?.getOrNull(indexNum)?.esp ?: ""
+                                    ?.getOrNull(indexNum)?.term ?: ""
                             )
                             keyboardController?.hide()
                         },
@@ -250,7 +272,6 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                             userAnswer = ""
                             result = ""
                             showNext = false
-                            feedbackColor = CustomColors.accentColor
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -267,8 +288,8 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
 
             } else {
 
-                // Exam finished
-                ScreenTitle(text = "Exam completed!")
+                // Practice finished
+                ScreenTitle(text = "Practice completed!")
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -298,7 +319,7 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                             modifier = Modifier.padding(16.dp)
                         ) {
                             Text(
-                                text = vocab.eng,
+                                text = vocab.translation,
                                 fontSize = 16.sp,
                                 color = CustomColors.textColor
                             )
@@ -306,7 +327,7 @@ fun ExamFunction(subjectId: Long, onBack: () -> Unit) {
                             Spacer(modifier = Modifier.height(4.dp))
 
                             Text(
-                                text = vocab.esp,
+                                text = vocab.term,
                                 fontSize = 16.sp,
                                 color = CustomColors.primaryColor
                             )

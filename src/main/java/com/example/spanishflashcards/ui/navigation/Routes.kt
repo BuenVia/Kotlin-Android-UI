@@ -6,6 +6,9 @@ import kotlinx.serialization.Serializable
 // Every screen in the app. Arguments a screen needs are passed as fields.
 
 @Serializable
+object LanguageSelectRoute
+
+@Serializable
 object HomeRoute
 
 @Serializable
@@ -18,10 +21,10 @@ data class SubjectDetailRoute(val subjectId: Long)
 data class EditSubjectRoute(val subjectId: Long)
 
 @Serializable
-data class LearnRoute(val subjectId: Long)
+data class ReviseRoute(val subjectId: Long)
 
 @Serializable
-data class ExamRoute(val subjectId: Long)
+data class PracticeRoute(val subjectId: Long)
 
 @Serializable
 data class CreateVocabRoute(val subjectId: Long)

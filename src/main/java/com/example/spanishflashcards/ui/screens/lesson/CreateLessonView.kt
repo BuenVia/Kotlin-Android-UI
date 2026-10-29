@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -23,9 +24,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.spanishflashcards.data.model.lesson.CreateLesson
+import com.example.spanishflashcards.data.model.language.CurrentLanguage
 import com.example.spanishflashcards.data.remote.RetrofitInstance
 import kotlinx.coroutines.launch
 import com.example.spanishflashcards.ui.utils.AppScreen
+import com.example.spanishflashcards.ui.utils.LESSON_MARKDOWN_HINT
 import com.example.spanishflashcards.ui.utils.ScreenTitle
 import com.example.spanishflashcards.ui.theme.CustomColors
 import com.example.spanishflashcards.ui.theme.ButtonShape
@@ -38,15 +41,20 @@ fun CreateLessonView(subjectId: Long, onBack: () -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
 
-    var lessonVal by remember(subjectId) {
-        mutableStateOf(
-            CreateLesson(
-                lessonTitle = "",
-                body = "",
-                subjectId = subjectId
-            )
-        )
+    // Saveable so typed text survives rotating the screen
+    var lessonTitle by rememberSaveable {
+        mutableStateOf("")
     }
+
+    var body by rememberSaveable {
+        mutableStateOf("")
+    }
+
+    val lessonVal = CreateLesson(
+        lessonTitle = lessonTitle,
+        body = body,
+        subjectId = subjectId
+    )
 
     var isLoading by remember {
         mutableStateOf(false)
@@ -73,7 +81,7 @@ fun CreateLessonView(subjectId: Long, onBack: () -> Unit) {
                 TextField(
                     value = lessonVal.lessonTitle,
                     onValueChange = {
-                        lessonVal = lessonVal.copy(lessonTitle = it)
+                        lessonTitle = it
                         errorMessage = ""
                     },
                     label = {
@@ -99,11 +107,15 @@ fun CreateLessonView(subjectId: Long, onBack: () -> Unit) {
                 TextField(
                     value = lessonVal.body,
                     onValueChange = {
-                        lessonVal = lessonVal.copy(body = it)
+                        body = it
                         errorMessage = ""
                     },
                     label = {
                         Text("Body")
+                    },
+                    // Reminder of the table syntax, the one Markdown feature that is easy to get wrong
+                    supportingText = {
+                        Text(LESSON_MARKDOWN_HINT)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 10,
@@ -188,7 +200,7 @@ suspend fun handleLessonSubmit(lessonVal: CreateLesson): Boolean {
         if(lessonVal.lessonTitle.isBlank() || lessonVal.body.isBlank()) {
             false
         } else {
-            RetrofitInstance.api.createLesson(lessonVal)
+            RetrofitInstance.api.createLesson(CurrentLanguage.pathSegment, lessonVal)
             true
         }
 

@@ -1,15 +1,21 @@
 package com.example.spanishflashcards.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.example.spanishflashcards.ui.screens.exam.ExamFunction
+import com.example.spanishflashcards.ui.screens.practice.PracticeView
+import com.example.spanishflashcards.data.model.language.CurrentLanguage
 import com.example.spanishflashcards.ui.screens.home.HomeScreen
-import com.example.spanishflashcards.ui.screens.learn.LearnFunction
+import com.example.spanishflashcards.ui.screens.language.LanguageSelectScreen
+import com.example.spanishflashcards.ui.screens.revise.ReviseView
 import com.example.spanishflashcards.ui.screens.lesson.CreateLessonView
 import com.example.spanishflashcards.ui.screens.lesson.EditLessonView
 import com.example.spanishflashcards.ui.screens.subject.CreateFunction
@@ -24,9 +30,17 @@ import com.example.spanishflashcards.ui.screens.vocab.ViewVocabFunction
 // Screens only report what the user wants to do via callbacks.
 // Data is reloaded when returning to a screen, as its LaunchedEffect runs again.
 @Composable
-fun AppNavHost(isAdmin: Boolean, modifier: Modifier = Modifier) {
+fun AppNavHost(adminAvailable: Boolean, modifier: Modifier = Modifier) {
 
     val navController = rememberNavController()
+
+    // Admin editing controls, switched on and off from the Edit mode switch on Home and Subject.
+    // One value for the whole app so the setting carries across screens; saveable so it survives rotation.
+    var editMode by rememberSaveable { mutableStateOf(false) }
+    val isAdmin = adminAvailable && editMode
+    // null hides the switch
+    val onEditModeChange: ((Boolean) -> Unit)? = if (adminAvailable) { { editMode = it } } else null
+
     // Only pop once the current screen has settled. While a screen is animating out its
     // back button can still be tapped, and a second pop would remove Home and leave a blank screen.
     val goBack: () -> Unit = {
@@ -37,13 +51,32 @@ fun AppNavHost(isAdmin: Boolean, modifier: Modifier = Modifier) {
 
     NavHost(
         navController = navController,
-        startDestination = HomeRoute,
+        startDestination = LanguageSelectRoute,
         modifier = modifier
     ) {
+
+        composable<LanguageSelectRoute> {
+            // Only offer Back when opened from Home - at startup there is nothing to go back to
+            val canGoBack = navController.previousBackStackEntry != null
+            LanguageSelectScreen(
+                onBack = if (canGoBack) goBack else null,
+                onLanguageSelected = { language ->
+                    if (navController.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
+                        CurrentLanguage.language = language
+                        // Clear the whole back stack so Home starts fresh with the new language's subjects
+                        navController.navigate(HomeRoute) {
+                            popUpTo(navController.graph.id) { inclusive = true }
+                        }
+                    }
+                }
+            )
+        }
 
         composable<HomeRoute> {
             HomeScreen(
                 isAdmin = isAdmin,
+                onEditModeChange = onEditModeChange,
+                onChangeLanguage = { navController.navigate(LanguageSelectRoute) },
                 onSubjectClick = { subjectId -> navController.navigate(SubjectDetailRoute(subjectId)) },
                 onCreateSubject = { navController.navigate(CreateSubjectRoute) }
             )
@@ -58,9 +91,10 @@ fun AppNavHost(isAdmin: Boolean, modifier: Modifier = Modifier) {
             SubjectViewFunction(
                 subjectId = subjectId,
                 isAdmin = isAdmin,
+                onEditModeChange = onEditModeChange,
                 onBack = goBack,
-                onLearn = { navController.navigate(LearnRoute(subjectId)) },
-                onExam = { navController.navigate(ExamRoute(subjectId)) },
+                onRevise = { navController.navigate(ReviseRoute(subjectId)) },
+                onPractice = { navController.navigate(PracticeRoute(subjectId)) },
                 onCreateVocab = { navController.navigate(CreateVocabRoute(subjectId)) },
                 onEditVocab = { vocabId -> navController.navigate(EditVocabRoute(vocabId)) },
                 onCreateLesson = { navController.navigate(CreateLessonRoute(subjectId)) },
@@ -78,12 +112,12 @@ fun AppNavHost(isAdmin: Boolean, modifier: Modifier = Modifier) {
             )
         }
 
-        composable<LearnRoute> { entry ->
-            LearnFunction(entry.toRoute<LearnRoute>().subjectId, onBack = goBack)
+        composable<ReviseRoute> { entry ->
+            ReviseView(entry.toRoute<ReviseRoute>().subjectId, onBack = goBack)
         }
 
-        composable<ExamRoute> { entry ->
-            ExamFunction(entry.toRoute<ExamRoute>().subjectId, onBack = goBack)
+        composable<PracticeRoute> { entry ->
+            PracticeView(entry.toRoute<PracticeRoute>().subjectId, onBack = goBack)
         }
 
         composable<CreateVocabRoute> { entry ->
