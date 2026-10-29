@@ -3,6 +3,7 @@ package com.example.spanishflashcards.ui.screens.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,17 +30,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.spanishflashcards.BuildConfig
 import com.example.spanishflashcards.data.model.subject.SubjectNames
+import com.example.spanishflashcards.data.model.language.CurrentLanguage
 import com.example.spanishflashcards.data.remote.RetrofitInstance
 import com.example.spanishflashcards.ui.theme.ButtonShape
 import com.example.spanishflashcards.ui.theme.CardShape
 import com.example.spanishflashcards.ui.theme.CustomColors
-import com.example.spanishflashcards.ui.theme.primaryButtonColors
+import com.example.spanishflashcards.ui.theme.secondaryButtonColors
 import com.example.spanishflashcards.ui.theme.surfaceButtonColors
+import com.example.spanishflashcards.ui.utils.AdminLink
 import com.example.spanishflashcards.ui.utils.AppScreen
+import com.example.spanishflashcards.ui.utils.EditModeToggle
+import com.example.spanishflashcards.ui.utils.LoadError
 
 @Composable
 fun HomeScreen(
     isAdmin: Boolean,
+    onEditModeChange: ((Boolean) -> Unit)?,
+    onChangeLanguage: () -> Unit,
     onSubjectClick: (subjectId: Long) -> Unit,
     onCreateSubject: () -> Unit,
     modifier: Modifier = Modifier
@@ -56,12 +64,19 @@ fun HomeScreen(
         mutableStateOf("")
     }
 
-    LaunchedEffect(Unit) {
+    val language = CurrentLanguage.language
+
+    // Bumped by the Retry button to run the load again
+    var loadAttempt by remember {
+        mutableIntStateOf(0)
+    }
+
+    LaunchedEffect(language, loadAttempt) {
         isLoading = true
         errorMessage = ""
 
         try {
-            listSubjects = RetrofitInstance.api.getSubjectNames()
+            listSubjects = RetrofitInstance.api.getSubjectNames(language.pathSegment)
         } catch (e: Exception) {
             e.printStackTrace()
             errorMessage = "Unable to load subjects. Please try again."
@@ -70,7 +85,12 @@ fun HomeScreen(
         }
     }
 
-    AppScreen(modifier = modifier) {
+    AppScreen(
+        modifier = modifier,
+        actions = onEditModeChange?.let { onChange ->
+            { EditModeToggle(editMode = isAdmin, onEditModeChange = onChange) }
+        }
+    ) {
 
         Column(
             modifier = Modifier
@@ -81,7 +101,7 @@ fun HomeScreen(
 
             // App heading
             Text(
-                text = "Spanish Flashcards",
+                text = "Learn ${language.displayName}",
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
                 color = CustomColors.textColor,
@@ -91,22 +111,42 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Build your vocabulary, one card at a time.",
+                text = "Aprende ${language.displayName}",
                 fontSize = 15.sp,
                 color = CustomColors.secondaryTextColor,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Subject list heading
-            Text(
-                text = "Your subjects",
+            // Change language - goes back to the language selection screen
+            Button(
+                onClick = { onChangeLanguage() },
+                shape = ButtonShape,
+                colors = secondaryButtonColors()
+            ) {
+                Text("Change language")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Subject list heading, with the add link alongside it in edit mode
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = CustomColors.textColor
-            )
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Your subjects",
+                    modifier = Modifier.weight(1f),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = CustomColors.textColor
+                )
+
+                if (isAdmin) {
+                    AdminLink(text = "+ Add", onClick = onCreateSubject)
+                }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -158,14 +198,10 @@ fun HomeScreen(
 
                 if (errorMessage.isNotEmpty()) {
                     item {
-                        Text(
-                            text = errorMessage,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp),
-                            fontSize = 14.sp,
-                            color = CustomColors.errorColor,
-                            textAlign = TextAlign.Center
+                        LoadError(
+                            message = errorMessage,
+                            onRetry = { loadAttempt++ },
+                            modifier = Modifier.padding(vertical = 16.dp)
                         )
                     }
                 }
@@ -185,27 +221,6 @@ fun HomeScreen(
                             textAlign = TextAlign.Center
                         )
                     }
-                }
-            }
-
-            if (isAdmin) {
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Create subject button
-                Button(
-                    onClick = { onCreateSubject() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp),
-                    shape = ButtonShape,
-                    colors = primaryButtonColors()
-                ) {
-                    Text(
-                        text = "+  Create subject",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
                 }
             }
 

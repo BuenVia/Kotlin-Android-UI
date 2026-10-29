@@ -14,8 +14,10 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -23,12 +25,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.spanishflashcards.data.model.language.CurrentLanguage
 import com.example.spanishflashcards.data.remote.RetrofitInstance
+import com.example.spanishflashcards.data.model.subject.EditSubject
 import com.example.spanishflashcards.data.model.subject.Subject
 import kotlinx.coroutines.launch
 import com.example.spanishflashcards.ui.utils.AppScreen
+import com.example.spanishflashcards.ui.utils.LoadError
 import com.example.spanishflashcards.ui.utils.ScreenTitle
 import com.example.spanishflashcards.ui.theme.ButtonShape
+import com.example.spanishflashcards.ui.theme.CustomColors
 import com.example.spanishflashcards.ui.theme.primaryButtonColors
 import com.example.spanishflashcards.ui.theme.appTextFieldColors
 
@@ -48,19 +55,52 @@ fun ViewSubjectEditDelete(subjectId: Long, onBack: () -> Unit, onDelete: () -> U
     }
 
 
-    var subject by remember {
+    // As loaded from the API - reloaded after a rotation
+    var loadedSubject by remember {
         mutableStateOf<Subject?>(null)
     }
 
-    LaunchedEffect(subjectId) {
+    // The user's edit. Saveable so it survives rotating the screen; null until loaded.
+    var subjectName by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
+    val subject = loadedSubject?.let {
+        it.copy(subjectName = subjectName ?: it.subjectName)
+    }
+
+    var loadFailed by remember {
+        mutableStateOf(false)
+    }
+
+    // Bumped by the Retry button to run the load again
+    var loadAttempt by remember {
+        mutableIntStateOf(0)
+    }
+
+    LaunchedEffect(subjectId, loadAttempt) {
+        loadFailed = false
         try {
-            subject = RetrofitInstance.api.getSubject(subjectId)
+            loadedSubject = RetrofitInstance.api.getSubject(CurrentLanguage.pathSegment, subjectId)
         } catch (e: Exception) {
             e.printStackTrace()
+            loadFailed = true
         }
     }
 
+    // Fields are only usable once the subject has loaded and while nothing is saving
+    val canEdit = !isLoading && subject != null
+
     AppScreen(onBack = onBack, backEnabled = !isLoading) {
+
+        if (loadFailed && subject == null) {
+            LoadError(
+                message = "Unable to load this subject. Please try again.",
+                onRetry = { loadAttempt++ },
+                modifier = Modifier.align(Alignment.Center)
+            )
+            return@AppScreen
+        }
 
         Column(
             modifier = Modifier
@@ -76,14 +116,14 @@ fun ViewSubjectEditDelete(subjectId: Long, onBack: () -> Unit, onDelete: () -> U
             TextField(
                 value = subject?.subjectName?: "",
                 onValueChange = {
-                    subject = subject?.copy(subjectName = it)
+                    subjectName = it
                 },
                 label = {
                     Text("Subject")
                 },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                enabled = !isLoading,
+                enabled = canEdit,
                 shape = ButtonShape,
                 colors = appTextFieldColors(),
                 keyboardOptions = KeyboardOptions(
@@ -97,6 +137,17 @@ fun ViewSubjectEditDelete(subjectId: Long, onBack: () -> Unit, onDelete: () -> U
             )
 
             Spacer(modifier = Modifier.height(12.dp))
+
+            // Error feedback
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    fontSize = 14.sp,
+                    color = CustomColors.errorColor
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -124,7 +175,7 @@ fun ViewSubjectEditDelete(subjectId: Long, onBack: () -> Unit, onDelete: () -> U
                         }
 
                     },
-                    enabled = !isLoading,
+                    enabled = canEdit,
                     modifier = Modifier
                         .weight(1f)
                         .height(52.dp),
@@ -138,7 +189,7 @@ fun ViewSubjectEditDelete(subjectId: Long, onBack: () -> Unit, onDelete: () -> U
                     onClick = {
                         onDelete()
                     },
-                    enabled = !isLoading,
+                    enabled = canEdit,
                     modifier = Modifier
                         .weight(1f)
                         .height(52.dp),
@@ -163,11 +214,13 @@ fun ViewSubjectEditDelete(subjectId: Long, onBack: () -> Unit, onDelete: () -> U
 
 suspend fun hendleSubjectEdit(subjectId: Long, subject: Subject?): Boolean {
     return try {
-        val res = RetrofitInstance.api.updateSubject(
+        if (subject == null) return false
+        // The API only accepts the new name - id and language cannot be changed
+        RetrofitInstance.api.updateSubject(
+            language = CurrentLanguage.pathSegment,
             id = subjectId,
-            subject = subject,
+            subject = EditSubject(subjectName = subject.subjectName),
         )
-        println(res)
         true
     } catch (e: Exception) {
         e.printStackTrace()

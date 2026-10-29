@@ -15,8 +15,10 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -24,13 +26,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.spanishflashcards.data.model.language.CurrentLanguage
 import com.example.spanishflashcards.data.remote.RetrofitInstance
-//import com.example.spanishflashcards.data.model.vocab.Vocab
 import com.example.spanishflashcards.data.model.vocab.EditVocab
 import kotlinx.coroutines.launch
 import com.example.spanishflashcards.ui.utils.AppScreen
+import com.example.spanishflashcards.ui.utils.LoadError
 import com.example.spanishflashcards.ui.utils.ScreenTitle
 import com.example.spanishflashcards.ui.theme.ButtonShape
+import com.example.spanishflashcards.ui.theme.CustomColors
 import com.example.spanishflashcards.ui.theme.primaryButtonColors
 import com.example.spanishflashcards.ui.theme.appTextFieldColors
 
@@ -41,8 +46,31 @@ fun ViewVocabFunction(vocabId: Long, onBack: () -> Unit, onDelete: () -> Unit) {
     val coroutineScope = rememberCoroutineScope()
 
 
-    var vocab by remember {
+    // As loaded from the API - reloaded after a rotation
+    var loadedVocab by remember {
         mutableStateOf<EditVocab?>(null)
+    }
+
+    // The user's edits. Saveable so they survive rotating the screen; null until loaded.
+    var term by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
+    var translation by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
+    val vocab = loadedVocab?.let {
+        it.copy(term = term ?: it.term, translation = translation ?: it.translation)
+    }
+
+    var loadFailed by remember {
+        mutableStateOf(false)
+    }
+
+    // Bumped by the Retry button to run the load again
+    var loadAttempt by remember {
+        mutableIntStateOf(0)
     }
 
     var isLoading by remember {
@@ -53,16 +81,29 @@ fun ViewVocabFunction(vocabId: Long, onBack: () -> Unit, onDelete: () -> Unit) {
         mutableStateOf("")
     }
 
-    LaunchedEffect(vocabId) {
+    LaunchedEffect(vocabId, loadAttempt) {
+        loadFailed = false
         try {
-            vocab = RetrofitInstance.api.getVocabById(vocabId)
-            println(vocab)
+            loadedVocab = RetrofitInstance.api.getVocabById(CurrentLanguage.pathSegment, vocabId)
         } catch (e: Exception) {
             e.printStackTrace()
+            loadFailed = true
         }
     }
 
+    // Fields are only usable once the vocab has loaded and while nothing is saving
+    val canEdit = !isLoading && vocab != null
+
     AppScreen(onBack = onBack, backEnabled = !isLoading) {
+
+        if (loadFailed && vocab == null) {
+            LoadError(
+                message = "Unable to load this vocabulary. Please try again.",
+                onRetry = { loadAttempt++ },
+                modifier = Modifier.align(Alignment.Center)
+            )
+            return@AppScreen
+        }
 
         Column(
             modifier = Modifier
@@ -80,17 +121,17 @@ fun ViewVocabFunction(vocabId: Long, onBack: () -> Unit, onDelete: () -> Unit) {
 //                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 TextField(
-                    value = vocab?.esp ?: "",
+                    value = vocab?.term ?: "",
                     onValueChange = {
                             newVal ->
-                        vocab = vocab?.copy(esp = newVal)
+                        term = newVal
                     },
                     label = {
                         Text("Vocab")
                     },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    enabled = !isLoading,
+                    enabled = canEdit,
                     shape = ButtonShape,
                     colors = appTextFieldColors(),
                     keyboardOptions = KeyboardOptions(
@@ -106,17 +147,17 @@ fun ViewVocabFunction(vocabId: Long, onBack: () -> Unit, onDelete: () -> Unit) {
                 Spacer(modifier = Modifier.height(12.dp))
 
                 TextField(
-                    value = vocab?.eng ?: "",
+                    value = vocab?.translation ?: "",
                     onValueChange = {
                             newVal ->
-                        vocab = vocab?.copy(eng = newVal)
+                        translation = newVal
                     },
                     label = {
                         Text("Translation")
                     },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    enabled = !isLoading,
+                    enabled = canEdit,
                     shape = ButtonShape,
                     colors = appTextFieldColors(),
                     keyboardOptions = KeyboardOptions(
@@ -131,6 +172,17 @@ fun ViewVocabFunction(vocabId: Long, onBack: () -> Unit, onDelete: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Error feedback
+                if (errorMessage.isNotEmpty()) {
+                    Text(
+                        text = errorMessage,
+                        fontSize = 14.sp,
+                        color = CustomColors.errorColor
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -139,7 +191,7 @@ fun ViewVocabFunction(vocabId: Long, onBack: () -> Unit, onDelete: () -> Unit) {
                         onClick = {
                             keyboardController?.hide()
 
-                            if (vocab?.esp?.isBlank() == true || vocab?.eng?.isBlank() == true) {
+                            if (vocab?.term?.isBlank() == true || vocab?.translation?.isBlank() == true) {
                                 errorMessage = "Please complete both fields."
                             } else {
                                 coroutineScope.launch {
@@ -158,7 +210,7 @@ fun ViewVocabFunction(vocabId: Long, onBack: () -> Unit, onDelete: () -> Unit) {
                                 }
                             }
                         },
-                        enabled = !isLoading,
+                        enabled = canEdit,
                         modifier = Modifier
                             .weight(1f)
                             .height(52.dp),
@@ -172,7 +224,7 @@ fun ViewVocabFunction(vocabId: Long, onBack: () -> Unit, onDelete: () -> Unit) {
                         onClick = {
                             onDelete()
                         },
-                        enabled = !isLoading,
+                        enabled = canEdit,
                         modifier = Modifier
                             .weight(1f)
                             .height(52.dp),
@@ -192,6 +244,7 @@ fun ViewVocabFunction(vocabId: Long, onBack: () -> Unit, onDelete: () -> Unit) {
 suspend fun handleVocabEdit(vocabId: Long, vocabVal: EditVocab?): Boolean {
     return try {
         RetrofitInstance.api.editVocab(
+            language = CurrentLanguage.pathSegment,
             id = vocabId,
             vocab = vocabVal,
         )

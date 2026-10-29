@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,11 +24,13 @@ import com.example.spanishflashcards.ui.theme.CustomColors
 // Standard frame for every screen: background colour, page margins and a top bar.
 // When onBack is given, the back button is drawn in the top-right of the top bar,
 // so it sits in exactly the same spot on every screen and never overlaps the content.
+// actions are drawn in the top-left of the same bar, e.g. the edit mode switch.
 @Composable
 fun AppScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     backEnabled: Boolean = true,
+    actions: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     Column(
@@ -37,15 +40,18 @@ fun AppScreen(
             .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
 
-        if (onBack != null) {
+        if (onBack != null || actions != null) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                actions?.invoke(this)
                 Spacer(modifier = Modifier.weight(1f))
-                BackButton(onBack = onBack, enabled = backEnabled)
+                if (onBack != null) {
+                    BackButton(onBack = onBack, enabled = backEnabled)
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))

@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.spanishflashcards.data.model.language.CurrentLanguage
 import com.example.spanishflashcards.data.remote.RetrofitInstance
 import com.example.spanishflashcards.data.model.vocab.CreateVocab
 import kotlinx.coroutines.launch
@@ -38,15 +40,20 @@ fun CreateVocabulary(subjectId: Long, onBack: () -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
 
-    var vocabVal by remember(subjectId) {
-        mutableStateOf(
-            CreateVocab(
-                esp = "",
-                eng = "",
-                subjectId = subjectId
-            )
-        )
+    // Saveable so typed text survives rotating the screen
+    var term by rememberSaveable {
+        mutableStateOf("")
     }
+
+    var translation by rememberSaveable {
+        mutableStateOf("")
+    }
+
+    val vocabVal = CreateVocab(
+        term = term,
+        translation = translation,
+        subjectId = subjectId
+    )
 
     var isLoading by remember {
         mutableStateOf(false)
@@ -72,22 +79,22 @@ fun CreateVocabulary(subjectId: Long, onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Add a Spanish word and its English translation.",
+                text = "Add a ${CurrentLanguage.language.displayName} word and its English translation.",
                 fontSize = 14.sp,
                 color = CustomColors.secondaryTextColor
             )
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Spanish word
+            // Word in the language being learned
             TextField(
-                value = vocabVal.esp,
+                value = vocabVal.term,
                 onValueChange = {
-                    vocabVal = vocabVal.copy(esp = it)
+                    term = it
                     errorMessage = ""
                 },
                 label = {
-                    Text("Spanish word")
+                    Text("${CurrentLanguage.language.displayName} word")
                 },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -108,9 +115,9 @@ fun CreateVocabulary(subjectId: Long, onBack: () -> Unit) {
 
             // English translation
             TextField(
-                value = vocabVal.eng,
+                value = vocabVal.translation,
                 onValueChange = {
-                    vocabVal = vocabVal.copy(eng = it)
+                    translation = it
                     errorMessage = ""
                 },
                 label = {
@@ -149,7 +156,7 @@ fun CreateVocabulary(subjectId: Long, onBack: () -> Unit) {
                 onClick = {
                     keyboardController?.hide()
 
-                    if (vocabVal.esp.isBlank() || vocabVal.eng.isBlank()) {
+                    if (vocabVal.term.isBlank() || vocabVal.translation.isBlank()) {
                         errorMessage = "Please complete both fields."
                     } else {
                         coroutineScope.launch {
@@ -195,10 +202,10 @@ fun CreateVocabulary(subjectId: Long, onBack: () -> Unit) {
 
 suspend fun handleVocabSubmit(vocabVal: CreateVocab): Boolean {
     return try {
-        if (vocabVal.esp.isBlank() || vocabVal.eng.isBlank()) {
+        if (vocabVal.term.isBlank() || vocabVal.translation.isBlank()) {
             false
         } else {
-            RetrofitInstance.api.createVocab(vocabVal)
+            RetrofitInstance.api.createVocab(CurrentLanguage.pathSegment, vocabVal)
             true
         }
     } catch (e: Exception) {

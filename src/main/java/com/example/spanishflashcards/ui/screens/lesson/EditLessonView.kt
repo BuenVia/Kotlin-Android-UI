@@ -15,8 +15,10 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -24,13 +26,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.spanishflashcards.data.model.lesson.EditLesson
-import com.example.spanishflashcards.data.model.lesson.Lesson
+import com.example.spanishflashcards.data.model.language.CurrentLanguage
 import com.example.spanishflashcards.data.remote.RetrofitInstance
 import kotlinx.coroutines.launch
 import com.example.spanishflashcards.ui.utils.AppScreen
+import com.example.spanishflashcards.ui.utils.LESSON_MARKDOWN_HINT
+import com.example.spanishflashcards.ui.utils.LoadError
 import com.example.spanishflashcards.ui.utils.ScreenTitle
 import com.example.spanishflashcards.ui.theme.ButtonShape
+import com.example.spanishflashcards.ui.theme.CustomColors
 import com.example.spanishflashcards.ui.theme.primaryButtonColors
 import com.example.spanishflashcards.ui.theme.appTextFieldColors
 
@@ -42,8 +48,31 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
     val coroutineScope = rememberCoroutineScope()
 
 
-    var lesson by remember {
+    // As loaded from the API - reloaded after a rotation
+    var loadedLesson by remember {
         mutableStateOf<EditLesson?>(null)
+    }
+
+    // The user's edits. Saveable so they survive rotating the screen; null until loaded.
+    var lessonTitle by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
+    var body by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
+    val lesson = loadedLesson?.let {
+        it.copy(lessonTitle = lessonTitle ?: it.lessonTitle, body = body ?: it.body)
+    }
+
+    var loadFailed by remember {
+        mutableStateOf(false)
+    }
+
+    // Bumped by the Retry button to run the load again
+    var loadAttempt by remember {
+        mutableIntStateOf(0)
     }
 
     var isLoading by remember {
@@ -54,16 +83,29 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
         mutableStateOf("")
     }
 
-    LaunchedEffect(lessonId) {
+    LaunchedEffect(lessonId, loadAttempt) {
+        loadFailed = false
         try {
-            lesson = RetrofitInstance.api.getLesson(lessonId);
-            println(lesson)
+            loadedLesson = RetrofitInstance.api.getLesson(CurrentLanguage.pathSegment, lessonId)
         } catch (e: Exception) {
             e.printStackTrace()
+            loadFailed = true
         }
     }
 
+    // Fields are only usable once the lesson has loaded and while nothing is saving
+    val canEdit = !isLoading && lesson != null
+
             AppScreen(onBack = onBack, backEnabled = !isLoading) {
+
+                if (loadFailed && lesson == null) {
+                    LoadError(
+                        message = "Unable to load this lesson. Please try again.",
+                        onRetry = { loadAttempt++ },
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                    return@AppScreen
+                }
 
                 Column(
                     modifier = Modifier
@@ -83,14 +125,14 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
                         TextField(
                             value = lesson?.lessonTitle ?: "",
                             onValueChange = { newVal ->
-                                lesson = lesson?.copy(lessonTitle = newVal)
+                                lessonTitle = newVal
                             },
                             label = {
                                 Text("Title")
                             },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            enabled = !isLoading,
+                            enabled = canEdit,
                             shape = ButtonShape,
                             colors = appTextFieldColors(),
                             keyboardOptions = KeyboardOptions(
@@ -108,15 +150,19 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
                         TextField(
                             value = lesson?.body ?: "",
                             onValueChange = { newVal ->
-                                lesson = lesson?.copy(body = newVal)
+                                body = newVal
                             },
                             label = {
                                 Text("Body")
                             },
+                            // Reminder of the table syntax, the one Markdown feature that is easy to get wrong
+                            supportingText = {
+                                Text(LESSON_MARKDOWN_HINT)
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             minLines = 10,
                             maxLines = 20,
-                            enabled = !isLoading,
+                            enabled = canEdit,
                             shape = ButtonShape,
                             colors = appTextFieldColors(),
                             keyboardOptions = KeyboardOptions(
@@ -125,6 +171,17 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
+
+                        // Error feedback
+                        if (errorMessage.isNotEmpty()) {
+                            Text(
+                                text = errorMessage,
+                                fontSize = 14.sp,
+                                color = CustomColors.errorColor
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -153,7 +210,7 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
                                         }
                                     }
                                 },
-                                enabled = !isLoading,
+                                enabled = canEdit,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(52.dp),
@@ -173,9 +230,7 @@ fun EditLessonView(lessonId: Long, subjectId: Long, onBack: () -> Unit) {
 
 suspend fun handleLessonEdit(lessonId: Long, lessonVal: EditLesson?): Boolean {
     return try {
-        var editLessonRes: Lesson
-        editLessonRes = RetrofitInstance.api.updateLesson(lessonId, lessonVal)
-        println(editLessonRes)
+        RetrofitInstance.api.updateLesson(CurrentLanguage.pathSegment, lessonId, lessonVal)
         true
     } catch (e: Exception) {
         e.printStackTrace()
