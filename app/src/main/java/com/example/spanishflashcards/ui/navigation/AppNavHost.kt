@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.spanishflashcards.ui.screens.practice.PracticeView
 import com.example.spanishflashcards.data.model.language.CurrentLanguage
+import com.example.spanishflashcards.ui.screens.category.CreateCategoryView
 import com.example.spanishflashcards.ui.screens.home.HomeScreen
 import com.example.spanishflashcards.ui.screens.language.LanguageSelectScreen
 import com.example.spanishflashcards.ui.screens.revise.ReviseView
@@ -78,8 +79,13 @@ fun AppNavHost(adminAvailable: Boolean, modifier: Modifier = Modifier) {
                 onEditModeChange = onEditModeChange,
                 onChangeLanguage = { navController.navigate(LanguageSelectRoute) },
                 onSubjectClick = { subjectId -> navController.navigate(SubjectDetailRoute(subjectId)) },
-                onCreateSubject = { navController.navigate(CreateSubjectRoute) }
+                onCreateSubject = { navController.navigate(CreateSubjectRoute) },
+                onCreateCategory = { navController.navigate(CreateCategoryRoute) }
             )
+        }
+
+        composable<CreateCategoryRoute> {
+            CreateCategoryView(onBack = goBack)
         }
 
         composable<CreateSubjectRoute> {

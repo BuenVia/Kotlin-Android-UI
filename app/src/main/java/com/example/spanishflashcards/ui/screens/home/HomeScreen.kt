@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,11 +30,7 @@ import com.example.spanishflashcards.BuildConfig
 import com.example.spanishflashcards.data.model.subject.SubjectNames
 import com.example.spanishflashcards.data.model.language.CurrentLanguage
 import com.example.spanishflashcards.data.remote.RetrofitInstance
-import com.example.spanishflashcards.ui.theme.ButtonShape
-import com.example.spanishflashcards.ui.theme.CardShape
 import com.example.spanishflashcards.ui.theme.CustomColors
-import com.example.spanishflashcards.ui.theme.secondaryButtonColors
-import com.example.spanishflashcards.ui.theme.surfaceButtonColors
 import com.example.spanishflashcards.ui.utils.AdminLink
 import com.example.spanishflashcards.ui.utils.AppScreen
 import com.example.spanishflashcards.ui.utils.EditModeToggle
@@ -49,6 +43,7 @@ fun HomeScreen(
     onChangeLanguage: () -> Unit,
     onSubjectClick: (subjectId: Long) -> Unit,
     onCreateSubject: () -> Unit,
+    onCreateCategory: () -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -63,6 +58,9 @@ fun HomeScreen(
     var errorMessage by remember {
         mutableStateOf("")
     }
+
+    // Newest first - the API returns database order, but sort so it never depends on that
+    val sortedSubjects = remember(listSubjects) { listSubjects.sortedByDescending { it.id } }
 
     val language = CurrentLanguage.language
 
@@ -89,7 +87,9 @@ fun HomeScreen(
         modifier = modifier,
         actions = onEditModeChange?.let { onChange ->
             { EditModeToggle(editMode = isAdmin, onEditModeChange = onChange) }
-        }
+        },
+        // Change language - goes back to the language selection screen
+        trailingActions = { ChangeLanguageLink(onClick = onChangeLanguage) }
     ) {
 
         Column(
@@ -117,18 +117,17 @@ fun HomeScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Change language - goes back to the language selection screen
-            Button(
-                onClick = { onChangeLanguage() },
-                shape = ButtonShape,
-                colors = secondaryButtonColors()
-            ) {
-                Text("Change language")
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
+
+            // Category admin link, only shown in edit mode
+            if (isAdmin) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    AdminLink(text = "+ New category", onClick = onCreateCategory)
+                }
+            }
 
             // Subject list heading, with the add link alongside it in edit mode
             Row(
@@ -158,27 +157,8 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
-                items(listSubjects) { sub ->
-
-                    Button(
-                        onClick = { onSubjectClick(sub.id) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(64.dp),
-                        shape = CardShape,
-                        colors = surfaceButtonColors(),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 2.dp
-                        )
-                    ) {
-
-                        Text(
-                            text = sub.subjectName ?: "Unnamed subject",
-                            modifier = Modifier.fillMaxWidth(),
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                items(sortedSubjects, key = { it.id }) { sub ->
+                    SubjectCard(subject = sub, onClick = { onSubjectClick(sub.id) })
                 }
 
                 if (isLoading) {

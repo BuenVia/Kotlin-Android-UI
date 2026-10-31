@@ -7,8 +7,8 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitInstance {
 
-//    private const val BASE_URL = "http://192.168.1.47:8080"
-    private const val BASE_URL = "https://spring-boot-backend-srdb.onrender.com/"
+    private const val BASE_URL = "http://192.168.1.47:8080"
+//    private const val BASE_URL = "https://spring-boot-backend-srdb.onrender.com/"
 
     // The Render server sleeps when idle and can take up to a minute to wake,
     // so the 10 second OkHttp defaults would fail the first request after a quiet period

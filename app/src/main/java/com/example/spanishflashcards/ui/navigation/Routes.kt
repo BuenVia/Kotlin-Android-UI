@@ -15,6 +15,9 @@ object HomeRoute
 object CreateSubjectRoute
 
 @Serializable
+object CreateCategoryRoute
+
+@Serializable
 data class SubjectDetailRoute(val subjectId: Long)
 
 @Serializable

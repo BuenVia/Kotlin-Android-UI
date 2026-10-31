@@ -25,12 +25,14 @@ import com.example.spanishflashcards.ui.theme.CustomColors
 // When onBack is given, the back button is drawn in the top-right of the top bar,
 // so it sits in exactly the same spot on every screen and never overlaps the content.
 // actions are drawn in the top-left of the same bar, e.g. the edit mode switch.
+// trailingActions are drawn in the top-right, before the back button if there is one.
 @Composable
 fun AppScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     backEnabled: Boolean = true,
     actions: (@Composable RowScope.() -> Unit)? = null,
+    trailingActions: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     Column(
@@ -40,7 +42,7 @@ fun AppScreen(
             .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
 
-        if (onBack != null || actions != null) {
+        if (onBack != null || actions != null || trailingActions != null) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -49,6 +51,7 @@ fun AppScreen(
             ) {
                 actions?.invoke(this)
                 Spacer(modifier = Modifier.weight(1f))
+                trailingActions?.invoke(this)
                 if (onBack != null) {
                     BackButton(onBack = onBack, enabled = backEnabled)
                 }

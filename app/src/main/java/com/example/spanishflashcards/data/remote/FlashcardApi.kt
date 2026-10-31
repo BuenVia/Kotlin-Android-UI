@@ -1,5 +1,8 @@
 package com.example.spanishflashcards.data.remote
 
+import com.example.spanishflashcards.data.model.category.CategorySummary
+import com.example.spanishflashcards.data.model.category.CreateCategory
+import com.example.spanishflashcards.data.model.level.LevelInfo
 import com.example.spanishflashcards.data.model.lesson.CreateLesson
 import com.example.spanishflashcards.data.model.lesson.EditLesson
 import com.example.spanishflashcards.data.model.lesson.Lesson
@@ -21,6 +24,22 @@ import retrofit2.http.PUT
 
 // Every path starts with the language segment (es / ca) - pass CurrentLanguage.pathSegment
 interface FlashcardApi {
+
+    // LEVELS - not language scoped
+    @GET("/levels")
+    suspend fun getLevels(): List<LevelInfo>
+
+    // CATEGORY
+    @GET("/{language}/category/getcategorynames")
+    suspend fun getCategoryNames(
+        @Path("language") language: String
+    ): List<CategorySummary>
+
+    @POST("/{language}/category/create")
+    suspend fun createCategory(
+        @Path("language") language: String,
+        @Body category: CreateCategory
+    ): CategorySummary
 
     // SUBJECT
     @GET("/{language}/subject/getsubjectnames")
