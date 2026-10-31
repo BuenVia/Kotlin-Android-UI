@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Dark so the window behind the app (e.g. while it starts) matches the dark Compose theme -->
+    <style name="Theme.SpanishFlashcards" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF111216</item>
+    </style>
+</resources>
